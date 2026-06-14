@@ -885,30 +885,49 @@ C → A → B → object
 这叫方法重写。
 
 ```python
-class Animal:
+'''
+演示方法重写
+'''
+
+class Animal(object):
+    def __init__(self, name):
+        self.name = name
+
     def speak(self):
-        print("动物会发出声音")
+        print('动物咆哮')
+
+    def introduce(self):
+        print(f'我是一只动物,我叫{self.name}')
 
 class Dog(Animal):
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+    # 子类重新实现了父类的introduce方法，
+    # 将来子类对象调用introduce，会触发子类的introduce方法
+    def introduce(self):
+        print(f'我是一只小狗，我叫{self.name}')
+
     def speak(self):
-        print("狗会汪汪叫")
+        print('小狗汪汪汪叫...')
 
-class Cat(Animal):
-    def speak(self):
-        print("猫会喵喵叫")
+dg = Dog('旺财',2)
+# 子类对象调用自己的introduce
+dg.introduce()
+dg.speak()
 
-dog = Dog()
-cat = Cat()
+# 子类对象具体调用哪个类的方法，取决于mro的查找顺序
+print(Dog.__mro__)
 
-dog.speak()
-cat.speak()
 ```
 
 输出：
 
-```text
-狗会汪汪叫
-猫会喵喵叫
+```bash
+我是一只小狗，我叫旺财
+小狗汪汪汪叫...
+(<class '__main__.Dog'>, <class '__main__.Animal'>, <class 'object'>)
+
 ```
 
 ###  为什么需要方法重写
@@ -931,55 +950,45 @@ cat.speak()
 
 这时可以使用 `super()`。
 
-```python
-class Animal:
-    def __init__(self, name):
-        self.name = name
-
-    def introduce(self):
-        print(f"我是一只动物，我叫{self.name}")
-
-class Dog(Animal):
-    def __init__(self, name, color):
-        super().__init__(name)
-        self.color = color
-
-    def introduce(self):
-        super().introduce()
-        print(f"我的颜色是{self.color}")
-
-dog = Dog("旺财", "黄色")
-dog.introduce()
-```
-
 正确完整代码：
 
 ```python
+'''
+子类调用父类的方法
+'''
+
+'''
+子类调用父类的方法
+方法1
+super().方法名(参数1,参数2,参数3...)
+方式2
+父类名.方法名(self,参数1,参数2,参数3...)
+'''
 class Animal:
     def __init__(self, name):
         self.name = name
 
     def introduce(self):
-        print(f"我是一只动物，我叫{self.name}")
+        print(f'我是一只动物,我叫{self.name}')
 
 class Dog(Animal):
-    def __init__(self, name, color):
+    def __init__(self, name,color):
         super().__init__(name)
         self.color = color
-
     def introduce(self):
         super().introduce()
-        print(f"我的颜色是{self.color}")
+        print(f'我的颜色是{self.color}')
 
-dog = Dog("旺财", "黄色")
+dog = Dog('旺财','蓝色')
 dog.introduce()
+
 ```
 
 输出：
 
 ```text
-我是一只动物，我叫旺财
-我的颜色是黄色
+我是一只动物,我叫旺财
+我的颜色是蓝色
 ```
 
 说明：
@@ -987,7 +996,252 @@ dog.introduce()
 - `super().__init__(name)` 调用了父类的构造方法。
 - `super().introduce()` 调用了父类的 `introduce` 方法。
 
----
+![image-20260604223932481](https://cdn.llfc.club/image-20260604223932481.png)
+
+**另外一种调用方式**
+
+``` python
+'''
+子类调用父类的方法
+'''
+
+'''
+子类调用父类的方法
+方法1
+super().方法名(参数1,参数2,参数3...)
+方式2
+父类名.方法名(self,参数1,参数2,参数3...)
+'''
+class Animal:
+    def __init__(self, name):
+        self.name = name
+
+    def introduce(self):
+        print(f'我是一只动物,我叫{self.name}')
+
+class Dog(Animal):
+    def __init__(self, name,color):
+        Animal.__init__(self, name)
+        self.color = color
+    def introduce(self):
+        Animal.introduce(self)
+        print(f'我的颜色是{self.color}')
+
+dog = Dog('旺财','蓝色')
+dog.introduce()
+
+```
+
+## 多继承风险
+
+>
+>
+>```python
+>'''
+>需求:
+>1. 定义一个汽车Car基类，构造方法__init__接受汽车的名字和颜色
+>
+>2. 定义GasolineCar类，继承自Car, 实现__init__方法，接受参数名字，颜色
+>    以及充能方式
+>    实现run方法，输出耗油运行
+>    实现energy方法，输出默认使用燃油
+>    
+>3. 定义ElectricCar类, 实现__init__方法，接受参数名字，颜色
+>    以及充能方式
+>    继承自Car，实现run方法，输出耗电运行
+>    实现energy方法，输出默认使用电能
+>    
+>4. 定义HybridCar类，同时继承自ElectricCar,GasolineCar，
+>实现run方法，油电混动运行
+>
+>5.  实例化一个HybridCar对象，调用energy以及run方法，看看输出
+>
+>'''
+>```
+
+**代码**
+
+``` python
+'''
+演示多继承隐患
+'''
+
+'''
+需求:
+1. 定义一个汽车Car基类，构造方法__init__接受汽车的名字和颜色
+
+2. 定义GasolineCar类，继承自Car, 实现__init__方法，接受参数名字，颜色
+    以及充能方式
+    实现run方法，输出耗油运行
+    实现energy方法，输出默认使用燃油
+
+3. 定义ElectricCar类, 实现__init__方法，接受参数名字，颜色
+    以及充能方式
+    继承自Car，实现run方法，输出耗电运行
+    实现energy方法，输出默认使用电能
+
+4. 定义HybridCar类，同时继承自ElectricCar,GasolineCar，
+实现run方法，油电混动运行
+
+5.  实例化一个HybridCar对象，调用energy以及run方法，看看输出
+
+'''
+# 1. 定义一个汽车Car基类，构造方法__init__接受汽车的名字和颜色
+class Car(object):
+    def __init__(self, name, color):
+        self.name = name
+        self.color = color
+
+# 2. 定义GasolineCar类，继承自Car, 实现__init__方法，接受参数名字，颜色
+#     以及充能方式
+class GasolineCar(Car):
+    def __init__(self, name, color,energy_type):
+        super().__init__(name, color)
+        self.energy_type = energy_type
+
+    def run(self):
+        print('耗油运行')
+
+    def energy(self):
+        print('默认使用燃油')
+
+# 3. 定义ElectricCar类, 实现__init__方法，接受参数名字，颜色
+#     以及充能方式
+
+class ElectricCar(Car):
+    def __init__(self, name, color, energy_type):
+        super().__init__(name, color)
+        self.energy_type = energy_type
+
+    def run(self):
+        print('耗电运行')
+
+    def energy(self):
+        print('默认使用电能')
+
+# 4. 定义HybridCar类，同时继承自ElectricCar,GasolineCar
+class HybridCar(ElectricCar, GasolineCar):
+    def __init__(self, name, color, energy_type):
+        self.name = name
+        self.color = color
+        self.energy_type = energy_type
+
+    def run(self):
+        print('油电混动运行')
+
+
+if __name__ == '__main__':
+    # gc = GasolineCar('宝马','白色','燃油')
+    # gc.run()
+    # gc.energy()
+    #
+    # ec = ElectricCar('比亚迪','黑色','电能')
+    # ec.run()
+    # ec.energy()
+    print(HybridCar.__mro__)
+    hy_car = HybridCar('比亚迪','黑色','油电混动')
+    hy_car.run()
+    hy_car.energy()
+```
+
+>
+>
+>如果HybridCar没有实现`__init__`方法, 将会导致通过mro顺序调用上一级的`__init__`方法
+>
+>而上一级是ElectricCar类，ElectricCar类的`__init__`方法内部又调用了`super()`所以会通过mro找到上一级
+>
+>这个上一级其实是GasolineCar, 进而造成`__init__`调用参数不匹配而失败
+>
+>规避的方式第一种即使实现HybridCar的`__init__方法`
+>
+>第二种方式就是通过父类名.方法名方式显示调用
+
+**第二种方式**
+
+``` python
+'''
+演示多继承隐患
+'''
+
+'''
+需求:
+1. 定义一个汽车Car基类，构造方法__init__接受汽车的名字和颜色
+
+2. 定义GasolineCar类，继承自Car, 实现__init__方法，接受参数名字，颜色
+    以及充能方式
+    实现run方法，输出耗油运行
+    实现energy方法，输出默认使用燃油
+
+3. 定义ElectricCar类, 实现__init__方法，接受参数名字，颜色
+    以及充能方式
+    继承自Car，实现run方法，输出耗电运行
+    实现energy方法，输出默认使用电能
+
+4. 定义HybridCar类，同时继承自ElectricCar,GasolineCar，
+实现run方法，油电混动运行
+
+5.  实例化一个HybridCar对象，调用energy以及run方法，看看输出
+
+'''
+# 1. 定义一个汽车Car基类，构造方法__init__接受汽车的名字和颜色
+class Car(object):
+    def __init__(self, name, color):
+        self.name = name
+        self.color = color
+
+# 2. 定义GasolineCar类，继承自Car, 实现__init__方法，接受参数名字，颜色
+#     以及充能方式
+class GasolineCar(Car):
+    def __init__(self, name, color,energy_type):
+        Car.__init__(self, name, color)
+        self.energy_type = energy_type
+
+    def run(self):
+        print('耗油运行')
+
+    def energy(self):
+        print('默认使用燃油')
+
+# 3. 定义ElectricCar类, 实现__init__方法，接受参数名字，颜色
+#     以及充能方式
+
+class ElectricCar(Car):
+    def __init__(self, name, color, energy_type):
+        Car.__init__(self, name, color)
+        self.energy_type = energy_type
+
+    def run(self):
+        print('耗电运行')
+
+    def energy(self):
+        print('默认使用电能')
+
+# 4. 定义HybridCar类，同时继承自ElectricCar,GasolineCar
+class HybridCar(ElectricCar, GasolineCar):
+
+    def run(self):
+        print('油电混动运行')
+
+
+if __name__ == '__main__':
+    # gc = GasolineCar('宝马','白色','燃油')
+    # gc.run()
+    # gc.energy()
+    #
+    # ec = ElectricCar('比亚迪','黑色','电能')
+    # ec.run()
+    # ec.energy()
+    print(HybridCar.__mro__)
+    hy_car = HybridCar('比亚迪','黑色','油电混动')
+    hy_car.run()
+    hy_car.energy()
+```
+
+>
+>
+>**结论**
+>
+>当使用多继承时，子类调用父类的方法，一定要用父类名.方法名(参数1,参数2...)
 
 ## 多态
 
@@ -1000,35 +1254,68 @@ dog.introduce()
 > 相同的方法名，不同的实现效果。
 
 ```python
-class Dog:
+'''
+演示多态用法
+'''
+
+'''
+用一个父类对象引用子类对象，通过父类对象调用方法，能够触发子类对象的方法
+这种机制就是多态
+
+多态必要条件:
+1. 必须要有继承关系
+2. 子类重写父类方法
+3. 父类对象引用子类对象
+'''
+
+class Animal:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
     def speak(self):
-        print("汪汪汪")
+        print(f'我叫{self.name}, 通过动物咆哮')
 
-class Cat:
+
+class Dog(Animal):
     def speak(self):
-        print("喵喵喵")
+        print(f'我叫{self.name}，叫声汪汪汪')
 
-class Duck:
+class Cat(Animal):
     def speak(self):
-        print("嘎嘎嘎")
+        print(f'我叫{self.name}，叫喵喵喵')
 
-animals = [Dog(), Cat(), Duck()]
+class Duck(Animal):
+    def speak(self):
+        print(f'我叫{self.name}，叫声嘎嘎嘎')
 
-for animal in animals:
+def animal_speak(animal:Animal):
     animal.speak()
+
+if __name__ == '__main__':
+    animal_speak(Animal('动物',8))
+    animal_speak(Dog('小狗',7))
+    animal_speak(Cat('小猫',4))
+    animal_speak(Duck('鸭子',3))
+
 ```
 
 输出：
 
 ```text
-汪汪汪
-喵喵喵
-嘎嘎嘎
+我叫动物, 通过动物咆哮
+我叫小狗，叫声汪汪汪
+我叫小猫，叫喵喵喵
+我叫鸭子，叫声嘎嘎嘎
 ```
 
 ### 多态的优势
 
-多态可以让代码更加灵活。
+多态可以让代码更加灵活。可以将抽象类的定义和具体类的实现分离，实现开发的解耦合
+
+同时使用平台，不用随着逻辑的变化而修改，将来只要扩充子类类型即可。
+
+符合高内聚和低耦合的思想。
 
 例如：
 
@@ -1043,11 +1330,104 @@ make_sound(Duck())
 
 这个函数不关心传入的是狗、猫还是鸭子，只关心对象有没有 `speak` 方法。
 
-这体现了 Python 的“鸭子类型”思想：
+**like方式继承**
 
-> 如果一个对象走起来像鸭子，叫起来像鸭子，那么它就可以被当作鸭子使用。
+like方式就是像的意思，不要求类一定和某一个类实现继承关系，只要这个类具备相似的方法即可。
 
----
+``` python
+'''
+演示like继承
+'''
+
+class Bird:
+    def fly(self):
+        print("i can fly")
+# is 方式继承，Angle一定是Bird
+class Angle(Bird):
+    def fly(self):
+        print('鹰会飞')
+# like 方式继承， Go语言特性interface
+class Plane:
+    def fly(self):
+        print('飞机也会飞')
+
+def func_test_bird(bird:Bird):
+    bird.fly()
+
+if __name__ == '__main__':
+    angle = Angle()
+    func_test_bird(angle)
+    plane = Plane()
+    func_test_bird(plane)
+```
+
+**王者荣耀换肤案例**
+
+``` python
+'''
+王者荣耀换肤案例
+'''
+from pyarrow._flight import BasicAuth
+
+
+# 皮肤基类
+class BaseSkin:
+    def show(self):
+        pass
+
+class XHOriginSkin(BaseSkin):
+    def show(self):
+        print('没错，我就是呼唤胜利的男神')
+
+class WXJFSkin(BaseSkin):
+    def show(self):
+        print('我就差一点了,快来砍我')
+
+class BaseHero:
+    def __init__(self,name,gender):
+        self.name = name
+        self.gender = gender
+        # 皮肤列表
+        self.skins = []
+
+class XHHero(BaseHero):
+    def __init__(self,name,gender):
+        super().__init__(name,gender)
+        # 初始化人物原皮
+        skin:BaseSkin = XHOriginSkin()
+        self.skins.append(skin)
+        # 上一次展示的皮肤
+        self.last_skin_index = 0
+
+    # 展示人物
+    def show(self):
+        self.skins[self.last_skin_index].show()
+
+    # 购买皮肤
+    def buy_skin(self, skin:BaseSkin):
+        self.skins.append(skin)
+
+    def change_skin(self,index):
+        if index >= len(self.skins):
+            return
+        self.skins[index].show()
+        self.last_skin_index = index
+
+if __name__ == '__main__':
+    xh_hero = XHHero('夏侯惇','男')
+    xh_hero.show()
+    # 购买皮肤
+    xh_hero.buy_skin(WXJFSkin())
+    # 换肤
+    xh_hero.change_skin(1)
+    # 展示英雄
+    xh_hero.show()
+
+```
+
+
+
+
 
 ## 特殊方法
 

@@ -20,7 +20,7 @@ FONT_SIZE = 22
 
 # ============ 配置标题 ============
 TITLE_TEXT = "Python进阶"
-SUBTITLE_TEXT = "封装继承多态"
+SUBTITLE_TEXT = "魔法方法"
 HOLD_SECONDS = 4
 # ==================================
 
