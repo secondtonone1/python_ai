@@ -1,0 +1,16 @@
+[
+    {
+        "book_id": "1001",
+        "name": "python进阶",
+        "author": "zack",
+        "price": 9.9,
+        "count": 2
+    },
+    {
+        "book_id": "1002",
+        "name": "C++高性能网络编程",
+        "author": "zack",
+        "price": 199.0,
+        "count": 5
+    }
+]
