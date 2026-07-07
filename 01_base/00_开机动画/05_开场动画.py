@@ -20,7 +20,7 @@ FONT_SIZE = 22
 
 # ============ 配置标题 ============
 TITLE_TEXT = "Python进阶"
-SUBTITLE_TEXT = "面向对象综合案例"
+SUBTITLE_TEXT = "闭包和装饰器"
 HOLD_SECONDS = 4
 # ==================================
 
