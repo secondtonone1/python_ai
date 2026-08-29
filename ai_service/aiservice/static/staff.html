@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartService - 客服工作台</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+        background: #f0f2f5;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+    .header {
+        background: #2b3648; color: #fff; padding: 12px 20px;
+        display: flex; align-items: center; justify-content: space-between;
+    }
+    .header h1 { font-size: 16px; }
+    .header .tabs button {
+        background: transparent; border: none; color: #9fb0c8; padding: 6px 14px;
+        cursor: pointer; font-size: 14px;
+    }
+    .header .tabs button.active { color: #fff; border-bottom: 2px solid #4f6ef7; }
+    .header .user { font-size: 13px; color: #9fb0c8; }
+    /* 登录页 */
+    .login-wrap { flex: 1; display: flex; align-items: center; justify-content: center; }
+    .login-card {
+        background: #fff; padding: 36px 40px; border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,.1); width: 340px; text-align: center;
+    }
+    .login-card h2 { margin-bottom: 22px; font-size: 18px; }
+    .login-card input {
+        width: 100%; border: 1px solid #ddd; border-radius: 6px;
+        padding: 10px 12px; font-size: 14px; margin-bottom: 12px; outline: none;
+    }
+    .login-card button {
+        width: 100%; border: none; border-radius: 6px; background: #4f6ef7;
+        color: #fff; padding: 10px; font-size: 14px; cursor: pointer;
+    }
+    .login-tip { color: #e6a23c; font-size: 12px; margin-top: 10px; }
+    /* 工作台 */
+    .workspace { flex: 1; display: flex; overflow: hidden; }
+    .session-panel {
+        width: 300px; background: #fff; border-right: 1px solid #eee;
+        display: flex; flex-direction: column;
+    }
+    .session-panel .panel-title { padding: 12px 16px; font-size: 14px; color: #666; border-bottom: 1px solid #f0f0f0; }
+    .session-list { flex: 1; overflow-y: auto; }
+    .session-item {
+        padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #f7f7f7;
+    }
+    .session-item:hover { background: #f7f9ff; }
+    .session-item.active { background: #eef2ff; }
+    .session-item .s-name { font-size: 14px; margin-bottom: 4px; }
+    .session-item .s-meta { font-size: 12px; color: #999; }
+    .empty-tip { text-align: center; color: #bbb; font-size: 13px; padding: 40px 0; }
+    .chat-panel { flex: 1; display: flex; flex-direction: column; background: #f7f8fa; }
+    .chat-header {
+        background: #fff; padding: 12px 20px; font-size: 14px;
+        border-bottom: 1px solid #eee; display: flex; justify-content: space-between;
+    }
+    .chat-header button {
+        border: 1px solid #ddd; background: #fff; border-radius: 4px;
+        padding: 4px 12px; cursor: pointer; font-size: 12px;
+    }
+    .messages { flex: 1; overflow-y: auto; padding: 20px; }
+    .msg-row { display: flex; margin-bottom: 12px; }
+    .msg-row.user { justify-content: flex-start; }
+    .msg-row.staff { justify-content: flex-end; }
+    .bubble {
+        max-width: 66%; padding: 9px 13px; border-radius: 10px;
+        font-size: 13px; line-height: 1.7; white-space: pre-wrap; word-break: break-word;
+    }
+    .msg-row.user .bubble { background: #fff; color: #333; border-top-left-radius: 2px; }
+    .msg-row.staff .bubble { background: #4f6ef7; color: #fff; border-top-right-radius: 2px; }
+    .msg-row .role-tag { font-size: 11px; color: #999; margin-bottom: 3px; }
+    .msg-row.staff .role-tag { text-align: right; }
+    .reply-area { display: flex; background: #fff; padding: 12px; border-top: 1px solid #eee; }
+    .reply-area input {
+        flex: 1; border: 1px solid #ddd; border-radius: 6px; padding: 10px 14px;
+        font-size: 13px; outline: none;
+    }
+    .reply-area button {
+        margin-left: 10px; border: none; border-radius: 6px; background: #4f6ef7;
+        color: #fff; padding: 0 22px; cursor: pointer; font-size: 13px;
+    }
+    /* 知识库 / 统计 面板 */
+    .panel-page { display: none; flex: 1; overflow-y: auto; padding: 20px; background: #f7f8fa; }
+    .panel-page.active { display: block; }
+    .card {
+        background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 16px;
+        box-shadow: 0 1px 6px rgba(0,0,0,.05);
+    }
+    .card h3 { font-size: 14px; margin-bottom: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { border-bottom: 1px solid #f0f0f0; padding: 8px 10px; text-align: left; }
+    th { color: #666; font-weight: 500; }
+    .stat-grid { display: flex; gap: 16px; flex-wrap: wrap; }
+    .stat-card {
+        background: #fff; border-radius: 8px; padding: 18px; min-width: 150px;
+        box-shadow: 0 1px 6px rgba(0,0,0,.05);
+    }
+    .stat-card .value { font-size: 24px; font-weight: 600; color: #4f6ef7; }
+    .stat-card .label { font-size: 12px; color: #999; margin-top: 4px; }
+    .form-row { display: flex; gap: 10px; margin-bottom: 10px; }
+    .form-row input, .form-row textarea {
+        flex: 1; border: 1px solid #ddd; border-radius: 6px; padding: 8px 12px;
+        font-size: 13px; outline: none; font-family: inherit;
+    }
+    .form-row button {
+        border: none; border-radius: 6px; background: #4f6ef7; color: #fff;
+        padding: 0 20px; cursor: pointer; font-size: 13px;
+    }
+    .del-btn { color: #e05c5c; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="header">
+    <h1>SmartService 客服工作台</h1>
+    <div class="tabs">
+        <button class="active" onclick="showPage('chat')">会话工作台</button>
+        <button onclick="showPage('stats')">统计报表</button>
+        <button onclick="showPage('knowledge')">知识库管理</button>
+    </div>
+    <span class="user" id="userInfo"></span>
+</div>
+
+<!-- 登录页 -->
+<div class="login-wrap" id="loginWrap">
+    <div class="login-card">
+        <h2>客服登录</h2>
+        <input id="username" placeholder="用户名 (admin)">
+        <input id="password" type="password" placeholder="密码 (123456)">
+        <button onclick="doLogin()">登录</button>
+        <div class="login-tip" id="loginTip"></div>
+    </div>
+</div>
+
+<!-- 工作台 -->
+<div class="workspace" id="workspace" style="display:none">
+    <div class="session-panel">
+        <div class="panel-title">会话列表 (每 5 秒自动刷新)</div>
+        <div class="session-list" id="sessionList"></div>
+    </div>
+    <div class="chat-panel" id="chatPanel">
+        <div class="chat-header">
+            <span id="chatTitle">请选择左侧会话</span>
+            <span>
+                <button onclick="takeoverSession()" style="margin-right:6px">接管会话</button>
+                <button onclick="closeSession()">关闭会话</button>
+            </span>
+        </div>
+        <div class="messages" id="staffMessages"></div>
+        <div class="reply-area">
+            <input id="replyInput" placeholder="输入回复内容 (需先接管会话)" autocomplete="off">
+            <button onclick="sendReply()">发送</button>
+        </div>
+    </div>
+</div>
+
+<!-- 统计页 -->
+<div class="panel-page" id="statsPage">
+    <div class="stat-grid" id="statGrid"></div>
+</div>
+
+<!-- 知识库页 -->
+<div class="panel-page" id="knowledgePage">
+    <div class="card">
+        <h3>新增知识条目</h3>
+        <div class="form-row">
+            <input id="kCategory" placeholder="分类 (如: 课程)">
+            <input id="kQuestion" placeholder="标准问题 (如: 课程怎么收费)">
+        </div>
+        <div class="form-row">
+            <input id="kKeywords" placeholder="关键词, 逗号分隔 (如: 学费,价格,多少钱)">
+        </div>
+        <div class="form-row">
+            <textarea id="kAnswer" rows="3" placeholder="标准答案"></textarea>
+        </div>
+        <div class="form-row"><button onclick="addKnowledge()">新增</button></div>
+    </div>
+    <div class="card">
+        <h3>知识库列表 (点击"删除"可移除条目)</h3>
+        <table>
+            <thead><tr><th>ID</th><th>分类</th><th>标准问题</th><th>命中次数</th><th>启用</th><th>操作</th></tr></thead>
+            <tbody id="knowledgeBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // ============ 全局状态 ============
+    let staffId = localStorage.getItem('staffId') || null;
+    let currentSession = null;      // 当前选中的会话
+    let lastMessageId = 0;          // 轮询游标
+    let statusFilter = 'waiting_human';
+
+    // ============ 工具 ============
+    async function api(path, options = {}) {
+        const headers = { 'Content-Type': 'application/json' };
+        if (staffId) headers['X-Staff-Id'] = staffId;
+        const resp = await fetch(path, { ...options, headers });
+        const data = await resp.json();
+        if (data.code !== 200) throw new Error(data.message);
+        return data.data;
+    }
+
+    function showPage(page) {
+        document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+        document.getElementById('chatPanel').parentElement.style.display = page === 'chat' ? 'flex' : 'none';
+        document.getElementById('statsPage').classList.toggle('active', page === 'stats');
+        document.getElementById('knowledgePage').classList.toggle('active', page === 'knowledge');
+        if (page === 'stats') loadStats();
+        if (page === 'knowledge') loadKnowledge();
+    }
+
+    // ============ 登录 ============
+    async function doLogin() {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        try {
+            const resp = await fetch('/api/staff/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            });
+            const data = await resp.json();
+            if (data.code !== 200) throw new Error(data.message);
+            staffId = data.data.id;
+            localStorage.setItem('staffId', staffId);
+            enterWorkspace(data.data);
+        } catch (e) {
+            document.getElementById('loginTip').textContent = e.message;
+        }
+    }
+
+    function enterWorkspace(staff) {
+        document.getElementById('loginWrap').style.display = 'none';
+        document.getElementById('workspace').style.display = 'flex';
+        document.getElementById('userInfo').textContent = staff.display_name + ' (' + staff.username + ')';
+        setInterval(refreshSessions, 5000);   // 会话列表轮询
+        refreshSessions();
+    }
+
+    // ============ 会话列表 ============
+    async function refreshSessions() {
+        try {
+            const sessions = await api('/api/staff/sessions?status=' + statusFilter);
+            const listBox = document.getElementById('sessionList');
+            listBox.innerHTML = '';
+            if (!sessions.length) {
+                listBox.innerHTML = '<div class="empty-tip">暂无' + statusName(statusFilter) + '的会话</div>';
+                return;
+            }
+            sessions.forEach(s => {
+                const item = document.createElement('div');
+                item.className = 'session-item' + (currentSession && currentSession.id === s.id ? ' active' : '');
+                item.innerHTML = '';
+                const name = document.createElement('div');
+                name.className = 's-name';
+                name.textContent = '#' + s.id + ' ' + s.visitor_name;
+                const meta = document.createElement('div');
+                meta.className = 's-meta';
+                meta.textContent = statusName(s.status) + ' | 更新于 ' + (s.updated_at || '').replace('T', ' ').slice(0, 16);
+                item.appendChild(name);
+                item.appendChild(meta);
+                item.onclick = () => selectSession(s);
+                listBox.appendChild(item);
+            });
+        } catch (e) { /* 静默重试 */ }
+    }
+
+    function statusName(status) {
+        return { bot: '机器人接待中', waiting_human: '等待人工', human: '人工接待中', closed: '已关闭', archived: '已归档' }[status] || status;
+    }
+
+    // ============ 会话详情 (增量轮询) ============
+    function selectSession(session) {
+        currentSession = session;
+        lastMessageId = 0;
+        document.getElementById('chatTitle').textContent =
+            '会话 #' + session.id + ' - ' + session.visitor_name + ' (' + statusName(session.status) + ')';
+        document.getElementById('staffMessages').innerHTML = '';
+        pollMessages();
+        clearInterval(window._msgTimer);
+        window._msgTimer = setInterval(pollMessages, 3000);   // 每 3 秒增量拉取
+    }
+
+    async function pollMessages() {
+        if (!currentSession) return;
+        try {
+            const messages = await api('/api/staff/sessions/' + currentSession.id + '/messages?after_id=' + lastMessageId);
+            const box = document.getElementById('staffMessages');
+            messages.forEach(m => {
+                if (m.role === 'bot') addChatMessage('bot', 'AI 机器人', m.content);
+                else if (m.role === 'user') addChatMessage('user', currentSession.visitor_name, m.content);
+                else addChatMessage('staff', '我 (客服)', m.content);
+                lastMessageId = m.id;
+            });
+            if (messages.length) box.scrollTop = box.scrollHeight;
+        } catch (e) { /* 静默重试 */ }
+    }
+
+    function addChatMessage(role, roleName, content) {
+        const box = document.getElementById('staffMessages');
+        const row = document.createElement('div');
+        row.className = 'msg-row ' + (role === 'staff' ? 'staff' : 'user');
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        const tag = document.createElement('div');
+        tag.className = 'role-tag';
+        tag.textContent = roleName;
+        const text = document.createElement('div');
+        text.textContent = content;
+        bubble.appendChild(tag);
+        bubble.appendChild(text);
+        row.appendChild(bubble);
+        box.appendChild(row);
+    }
+
+    // ============ 操作 ============
+    async function takeoverSession() {
+        if (!currentSession) return alert('请先选择会话');
+        try {
+            await api('/api/staff/sessions/' + currentSession.id + '/takeover', { method: 'POST' });
+            currentSession.status = 'human';
+            refreshSessions();
+        } catch (e) { alert(e.message); }
+    }
+
+    async function sendReply() {
+        const content = document.getElementById('replyInput').value.trim();
+        if (!content || !currentSession) return;
+        try {
+            await api('/api/staff/sessions/' + currentSession.id + '/reply', {
+                method: 'POST',
+                body: JSON.stringify({ content }),
+            });
+            document.getElementById('replyInput').value = '';
+        } catch (e) { alert(e.message); }
+    }
+
+    async function closeSession() {
+        if (!currentSession) return alert('请先选择会话');
+        try {
+            await api('/api/staff/sessions/' + currentSession.id + '/close', { method: 'POST' });
+            currentSession.status = 'closed';
+            refreshSessions();
+        } catch (e) { alert(e.message); }
+    }
+
+    // ============ 统计报表 ============
+    async function loadStats() {
+        try {
+            const stats = await api('/api/staff/stats');
+            const grid = document.getElementById('statGrid');
+            grid.innerHTML = '';
+            const items = [
+                ['会话总数', stats.session_total],
+                ['今日消息', stats.message_today],
+                ['机器人回答', stats.bot_answer_total],
+                ['知识库命中率', (stats.bot_hit_rate * 100).toFixed(1) + '%'],
+                ['评价次数', stats.rating_count],
+                ['平均满意度', stats.avg_rating === null ? '-' : stats.avg_rating],
+            ];
+            items.forEach(([label, value]) => {
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                const v = document.createElement('div');
+                v.className = 'value';
+                v.textContent = value;
+                const l = document.createElement('div');
+                l.className = 'label';
+                l.textContent = label;
+                card.appendChild(v);
+                card.appendChild(l);
+                grid.appendChild(card);
+            });
+            // 状态分布
+            const dist = document.createElement('div');
+            dist.className = 'card';
+            dist.innerHTML = '';
+            const h = document.createElement('h3');
+            h.textContent = '会话状态分布';
+            const table = document.createElement('table');
+            table.innerHTML = '<thead><tr><th>状态</th><th>数量</th></tr></thead>';
+            const tbody = document.createElement('tbody');
+            const counts = stats.session_by_status || {};
+            Object.keys(counts).forEach(k => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td>' + statusName(k) + '</td><td>' + counts[k] + '</td>';
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            dist.appendChild(h);
+            dist.appendChild(table);
+            grid.appendChild(dist);
+        } catch (e) { alert(e.message); }
+    }
+
+    // ============ 知识库管理 ============
+    async function loadKnowledge() {
+        try {
+            const rows = await api('/api/staff/knowledge');
+            const tbody = document.getElementById('knowledgeBody');
+            tbody.innerHTML = '';
+            rows.forEach(k => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = '';
+                const cells = [k.id, k.category, k.question, k.hit_count, k.enabled ? '是' : '否'];
+                cells.forEach(c => {
+                    const td = document.createElement('td');
+                    td.textContent = c;
+                    tr.appendChild(td);
+                });
+                const opTd = document.createElement('td');
+                const del = document.createElement('span');
+                del.className = 'del-btn';
+                del.textContent = '删除';
+                del.onclick = async () => {
+                    if (!confirm('确认删除知识条目 #' + k.id + '? ')) return;
+                    try {
+                        await api('/api/staff/knowledge/' + k.id, { method: 'DELETE' });
+                        loadKnowledge();
+                    } catch (e) { alert(e.message); }
+                };
+                opTd.appendChild(del);
+                tr.appendChild(opTd);
+                tbody.appendChild(tr);
+            });
+        } catch (e) { alert(e.message); }
+    }
+
+    async function addKnowledge() {
+        const body = {
+            category: document.getElementById('kCategory').value.trim(),
+            question: document.getElementById('kQuestion').value.trim(),
+            keywords: document.getElementById('kKeywords').value.trim(),
+            answer: document.getElementById('kAnswer').value.trim(),
+        };
+        if (!body.question || !body.keywords || !body.answer) return alert('请填写完整信息');
+        try {
+            await api('/api/staff/knowledge', { method: 'POST', body: JSON.stringify(body) });
+            document.getElementById('kCategory').value = '';
+            document.getElementById('kQuestion').value = '';
+            document.getElementById('kKeywords').value = '';
+            document.getElementById('kAnswer').value = '';
+            loadKnowledge();
+        } catch (e) { alert(e.message); }
+    }
+
+    // ============ 启动 ============
+    if (staffId) {
+        enterWorkspace({ display_name: '客服', username: '#' + staffId });
+    }
+</script>
+</body>
+</html>

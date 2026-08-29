@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartService - AI 智能客服</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+        background: #f0f2f5;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .header {
+        width: 100%;
+        background: linear-gradient(135deg, #4f6ef7 0%, #7b5cf0 100%);
+        color: #fff;
+        padding: 14px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    }
+    .header h1 { font-size: 18px; font-weight: 600; }
+    .status-badge {
+        background: rgba(255,255,255,.2);
+        border-radius: 12px;
+        padding: 4px 12px;
+        font-size: 12px;
+    }
+    .chat-box {
+        width: 720px;
+        max-width: 96vw;
+        flex: 1;
+        margin: 16px 0;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,.08);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+    }
+    .msg-row { display: flex; margin-bottom: 14px; }
+    .msg-row.user { justify-content: flex-end; }
+    .bubble {
+        max-width: 72%;
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-size: 14px;
+        line-height: 1.7;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+    .msg-row.user .bubble { background: #4f6ef7; color: #fff; border-top-right-radius: 2px; }
+    .msg-row.bot .bubble, .msg-row.staff .bubble { background: #f1f3f7; color: #333; border-top-left-radius: 2px; }
+    .msg-row .role-tag { font-size: 12px; color: #999; margin-bottom: 4px; }
+    .msg-row.user .role-tag { text-align: right; }
+    .rating-bar { margin-top: 8px; font-size: 12px; color: #999; }
+    .rating-bar button {
+        border: 1px solid #ddd; background: #fff; border-radius: 10px;
+        padding: 2px 10px; cursor: pointer; font-size: 12px; margin-right: 6px;
+    }
+    .rating-bar button:hover { border-color: #4f6ef7; color: #4f6ef7; }
+    .rating-bar button.done { opacity: .5; cursor: default; }
+    .notice {
+        text-align: center; color: #999; font-size: 12px; margin: 6px 0;
+    }
+    .notice.warn { color: #e6a23c; }
+    .input-area {
+        display: flex; border-top: 1px solid #eee; padding: 12px;
+    }
+    .input-area input {
+        flex: 1; border: 1px solid #ddd; border-radius: 20px;
+        padding: 10px 16px; font-size: 14px; outline: none;
+    }
+    .input-area input:focus { border-color: #4f6ef7; }
+    .input-area button {
+        margin-left: 10px; border: none; border-radius: 20px;
+        background: #4f6ef7; color: #fff; padding: 10px 22px;
+        font-size: 14px; cursor: pointer;
+    }
+    .input-area button:hover { background: #3d5ce0; }
+</style>
+</head>
+<body>
+<div class="header">
+    <h1>SmartService AI 智能客服</h1>
+    <span class="status-badge" id="statusBadge">连接中...</span>
+</div>
+<div class="chat-box">
+    <div class="messages" id="messages"></div>
+    <div class="input-area">
+        <input id="input" placeholder="请输入您的问题, 回车发送" autocomplete="off">
+        <button onclick="send()">发送</button>
+    </div>
+</div>
+
+<script>
+    // ============ 全局状态 ============
+    let sessionId = null;
+    let ws = null;
+    let currentBubble = null;      // 正在流式输出的气泡(文本节点)
+    let pingTimer = null;
+
+    const messagesBox = document.getElementById('messages');
+    const statusBadge = document.getElementById('statusBadge');
+    const input = document.getElementById('input');
+
+    // ============ 初始化: 创建会话 -> 连接 WebSocket ============
+    async function init() {
+        try {
+            const resp = await fetch('/api/session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ visitor_name: '访客' }),
+            });
+            const data = await resp.json();
+            if (data.code !== 200) throw new Error(data.message);
+            sessionId = data.data.id;
+            connectWs();
+        } catch (e) {
+            setStatus('初始化失败: ' + e.message, true);
+        }
+    }
+
+    function connectWs() {
+        ws = new WebSocket('ws://' + location.host + '/ws/chat/' + sessionId);
+        ws.onmessage = (event) => handleServerMsg(JSON.parse(event.data));
+        ws.onclose = () => {
+            setStatus('连接已断开, 正在重连...', true);
+            setTimeout(connectWs, 3000);   // 断线自动重连
+        };
+        // 心跳保活: 每 30 秒发一次 ping (对应 TCP 长连接的心跳概念)
+        pingTimer = setInterval(() => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'ping' }));
+            }
+        }, 30000);
+    }
+
+    // ============ 服务端消息处理 ============
+    function handleServerMsg(msg) {
+        switch (msg.type) {
+            case 'chunk':           // 流式分片: 追加到当前气泡
+                appendChunk(msg.delta);
+                break;
+            case 'message_end':     // 一条机器人消息输出完毕
+                finalizeBubble(msg.message);
+                break;
+            case 'session_status':  // 会话状态变化
+                updateSessionStatus(msg.status);
+                break;
+            case 'staff_reply':     // 人工客服回复(实时推送)
+                addMessage('staff', '人工客服', msg.message.content, null);
+                break;
+            case 'error':
+                addNotice(msg.message, true);
+                break;
+            default:
+                break;
+        }
+    }
+
+    // ============ 界面渲染 (全部用 textContent, 防止 XSS 注入) ============
+    function addMessage(role, roleName, content, messageId) {
+        const row = document.createElement('div');
+        row.className = 'msg-row ' + role;
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        const tag = document.createElement('div');
+        tag.className = 'role-tag';
+        tag.textContent = roleName;
+        const text = document.createElement('div');
+        text.textContent = content;          // 安全实践: 不用 innerHTML
+        bubble.appendChild(tag);
+        bubble.appendChild(text);
+        if (role === 'bot' && messageId) {
+            bubble.appendChild(buildRatingBar(messageId));
+        }
+        row.appendChild(bubble);
+        messagesBox.appendChild(row);
+        scrollToBottom();
+    }
+
+    function buildRatingBar(messageId) {
+        const bar = document.createElement('div');
+        bar.className = 'rating-bar';
+        const label = document.createElement('span');
+        label.textContent = '回答是否有帮助? ';
+        const yesBtn = document.createElement('button');
+        yesBtn.textContent = '满意';
+        const noBtn = document.createElement('button');
+        noBtn.textContent = '不满意';
+        const doRate = async (rating, btn) => {
+            const resp = await fetch('/api/message/' + messageId + '/rate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rating: rating }),
+            });
+            const data = await resp.json();
+            if (data.code === 200) {
+                bar.querySelectorAll('button').forEach(b => b.classList.add('done'));
+                label.textContent = '感谢您的反馈! ';
+            }
+        };
+        yesBtn.onclick = () => doRate(1, yesBtn);
+        noBtn.onclick = () => doRate(-1, noBtn);
+        bar.appendChild(label);
+        bar.appendChild(yesBtn);
+        bar.appendChild(noBtn);
+        return bar;
+    }
+
+    function appendChunk(delta) {
+        // 流式输出: 分片逐字追加到同一个气泡
+        if (!currentBubble) {
+            const row = document.createElement('div');
+            row.className = 'msg-row bot';
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            const tag = document.createElement('div');
+            tag.className = 'role-tag';
+            tag.textContent = 'AI 机器人';
+            const text = document.createElement('div');
+            text.textContent = '';
+            bubble.appendChild(tag);
+            bubble.appendChild(text);
+            row.appendChild(bubble);
+            messagesBox.appendChild(row);
+            currentBubble = { row: row, text: text };
+        }
+        currentBubble.text.textContent += delta;   // 逐字效果
+        scrollToBottom();
+    }
+
+    function finalizeBubble(message) {
+        if (currentBubble) {
+            const row = currentBubble.row;
+            const bubble = row.querySelector('.bubble');
+            bubble.appendChild(buildRatingBar(message.id));
+            currentBubble = null;
+        } else {
+            addMessage('bot', 'AI 机器人', message.content, message.id);
+        }
+        scrollToBottom();
+    }
+
+    function addNotice(content, warn) {
+        const div = document.createElement('div');
+        div.className = 'notice' + (warn ? ' warn' : '');
+        div.textContent = content;
+        messagesBox.appendChild(div);
+        scrollToBottom();
+    }
+
+    function updateSessionStatus(status) {
+        const map = {
+            bot: '机器人接待中',
+            waiting_human: '已转人工, 请稍候...',
+            human: '人工客服已接入',
+            closed: '会话已结束',
+        };
+        setStatus(map[status] || status, status === 'waiting_human');
+    }
+
+    function setStatus(text, warn) {
+        statusBadge.textContent = text;
+        statusBadge.style.background = warn ? 'rgba(255,180,60,.35)' : 'rgba(255,255,255,.2)';
+    }
+
+    function scrollToBottom() {
+        messagesBox.scrollTop = messagesBox.scrollHeight;
+    }
+
+    // ============ 发送消息 ============
+    function send() {
+        const text = input.value.trim();
+        if (!text) return;
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+            addNotice('连接尚未就绪, 请稍候...', true);
+            return;
+        }
+        ws.send(JSON.stringify({ type: 'chat', content: text }));
+        addMessage('user', '我', text, null);
+        input.value = '';
+    }
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') send();
+    });
+
+    init();
+</script>
+</body>
+</html>

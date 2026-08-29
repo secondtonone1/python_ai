@@ -1,0 +1,7 @@
+# SmartService AI customer service dependencies
+# Install: pip install -r requirements.txt
+fastapi>=0.115.0      # Web framework (async, used by most AI projects)
+uvicorn[standard]>=0.30.0  # ASGI server, [standard] includes websockets support
+pymysql>=1.1.0        # MySQL driver
+DBUtils>=3.0.3        # MySQL connection pool
+httpx>=0.27.0         # TestClient 依赖 (tests/test_api.py) + scripts/e2e_acceptance.py

@@ -1,0 +1,38 @@
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "reload": false
+  },
+  "database": {
+    "host": "119.91.129.93",
+    "port": 3308,
+    "user": "root",
+    "password": "123456",
+    "db": "ai_service_db",
+    "charset": "utf8mb4",
+    "pool_min": 2,
+    "pool_max": 10
+  },
+  "log": {
+    "level": "INFO",
+    "dir": "logs",
+    "file": "server.log",
+    "max_bytes": 10485760,
+    "backup_count": 5
+  },
+  "bot": {
+    "stream_chunk_delay": 0.05,
+    "stream_chunk_size": 8,
+    "fallback_message": "抱歉，这个问题我暂时无法解答，已为您转接人工客服，请稍候...",
+    "pending_prompt": "您可能想问以下问题：\n{options}\n请回复序号（如：1）",
+    "session_timeout_minutes": 30
+  },
+  "rate_limit": {
+    "chat_per_minute": 20,
+    "session_per_minute": 10
+  },
+  "staff": {
+    "password_salt": "aiservice"
+  }
+}
