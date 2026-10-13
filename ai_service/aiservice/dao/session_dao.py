@@ -21,7 +21,7 @@ class SessionDao:
         这样服务模块在导入阶段不会因"连接池尚未初始化"而崩溃"""
         return DbPool.instance()
 
-    def create(self, visitor_name: str = '访客') -> int:
+    def create(self, visitor_name: str = '来访者') -> int:
         """创建会话, 返回会话 id"""
         sql = 'INSERT INTO t_session (visitor_name) VALUES (%s)'
         with self._pool.cursor() as cursor:

@@ -72,6 +72,13 @@ class StaffReplyRequest(BaseModel):
     content: str = Field(min_length=1, max_length=2000, description='回复内容')
 
 
+class PolishRequest(BaseModel):
+    """AI 检索润色请求 (content 可选)"""
+    content: str | None = Field(
+        default=None, max_length=2000,
+        description='咨询师已写好的草稿; 传入则"润色这段草稿", 为空则"根据来访者消息生成新草稿"')
+
+
 class KnowledgeCreateRequest(BaseModel):
     """知识库新增请求"""
     category: str = Field(default='', max_length=64)

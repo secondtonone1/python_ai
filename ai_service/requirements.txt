@@ -1,4 +1,4 @@
-# SmartService AI customer service dependencies
+# 心聆 MindEcho 在线心理支持平台 dependencies
 # Install: pip install -r requirements.txt
 fastapi>=0.115.0      # Web framework (async, used by most AI projects)
 uvicorn[standard]>=0.30.0  # ASGI server, [standard] includes websockets support

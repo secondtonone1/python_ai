@@ -21,11 +21,16 @@
     "max_bytes": 10485760,
     "backup_count": 5
   },
+  "brand": {
+    "name": "心聆 MindEcho",
+    "slogan": "让每一种情绪，都有回声",
+    "org_name": "在线心理支持平台(教学演示)"
+  },
   "bot": {
     "stream_chunk_delay": 0.05,
     "stream_chunk_size": 8,
-    "fallback_message": "抱歉，这个问题我暂时无法解答，已为您转接人工客服，请稍候...",
-    "pending_prompt": "您可能想问以下问题：\n{options}\n请回复序号（如：1）",
+    "fallback_message": "谢谢你的信任，愿意把这件事讲给我听。这个问题超出了我能稳定回答的范围，我建议由专业的咨询师来陪你一起梳理——我已为你转接在线咨询师，请稍候。",
+    "pending_prompt": "你可能是想问下面哪一个？\n{options}\n请回复序号（如：1）",
     "session_timeout_minutes": 30
   },
   "rate_limit": {
@@ -33,6 +38,20 @@
     "session_per_minute": 10
   },
   "staff": {
+    "role_name": "咨询师",
     "password_salt": "aiservice"
+  },
+  "polisher": {
+    "mode": "auto",
+    "system_prompt": "你是\"心聆 MindEcho\"心理支持平台的心理咨询师助手。请基于知识库要点，用温和、共情、不评判的语气草拟一段给来访者的回复(150字以内)。要求:1)先接住情绪,不急着给建议;2)给1-2条当下可操作的缓解方法;3)不诊断、不开药、不承诺效果;4)涉及自伤/自杀风险时只强调立即拨打120/110或当地心理援助热线;5)结尾可温和引导预约咨询师进一步沟通。直接输出回复正文,不要解释。",
+    "llm": {
+      "base_url": "https://api.deepseek.com",
+      "api_key_env": "DEEPSEEK_API_KEY",
+      "api_key": "",
+      "model": "deepseek-chat",
+      "temperature": 0.7,
+      "max_tokens": 500,
+      "timeout_seconds": 60
+    }
   }
 }

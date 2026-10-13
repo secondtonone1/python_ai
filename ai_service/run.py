@@ -1,5 +1,5 @@
 '''
-SmartService AI 智能客服系统 - 启动入口
+心聆 MindEcho 在线心理支持平台 - 启动入口
 ========================================
 用法 (在 ai_service 目录下执行):
     python run.py             # 启动服务
@@ -18,7 +18,7 @@ from aiservice.common.config import Config
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='SmartService AI 智能客服系统')
+    parser = argparse.ArgumentParser(description='心聆 MindEcho 在线心理支持平台')
     parser.add_argument('--host', default=None, help='监听地址 (默认读取 config.json)')
     parser.add_argument('--port', type=int, default=None, help='监听端口 (默认读取 config.json)')
     parser.add_argument('--reload', action='store_true', help='开发模式: 代码变更自动重启')

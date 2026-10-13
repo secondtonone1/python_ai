@@ -15,7 +15,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from aiservice.api import chat, pages, staff, ws
+from aiservice.api import chat, pages, staff, staff_ws, ws
 from aiservice.common.config import Config
 from aiservice.common.exceptions import MonitorError, RateLimitError
 from aiservice.common.logger import get_logger, setup_logging
@@ -61,7 +61,7 @@ async def lifespan(app: FastAPI):
         logger.warning(f'数据库连接失败(数据接口将不可用): {e}')
     # 拉起后台归档任务
     background_task = asyncio.create_task(_background_loop())
-    logger.info('SmartService AI 智能客服系统启动完成')
+    logger.info('心聆 MindEcho 在线心理支持平台启动完成')
     yield
     # 退出: 取消后台任务 + 关闭连接池
     background_task.cancel()
@@ -114,10 +114,10 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title='SmartService AI 智能客服系统',
-        description='02_advance 阶段 AI 方向综合项目: '
-                    '规则引擎驱动的智能客服, 可插拔设计, 后续无缝接入真实大模型',
-        version='1.0.0',
+        title='心聆 MindEcho 在线心理支持平台',
+        description='02_advance 阶段 AI 方向综合项目: 规则引擎驱动的 AI 心理咨询师, '
+                    '可插拔设计; 咨询师端提供 AI 检索润色助手, 后续可无缝接入真实大模型',
+        version='1.1.0',
         lifespan=lifespan,
     )
     app.add_exception_handler(MonitorError, monitor_error_handler)
@@ -129,6 +129,7 @@ def create_app() -> FastAPI:
     app.include_router(chat.router)
     app.include_router(staff.router)
     app.include_router(ws.router)
+    app.include_router(staff_ws.router)
 
     @app.get('/api/health', tags=['系统'], summary='健康检查')
     def health():

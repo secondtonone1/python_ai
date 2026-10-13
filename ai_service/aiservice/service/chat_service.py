@@ -20,6 +20,7 @@ from aiservice.dao.message_dao import MessageDao
 from aiservice.dao.session_dao import SessionDao
 from aiservice.service.bot_engine import RuleEngine, split_answer
 from aiservice.service.rate_limiter import RateLimiter
+from aiservice.service.staff_ws_manager import StaffWsManager
 from aiservice.service.ws_manager import WsManager
 
 
@@ -30,6 +31,7 @@ class _ChatResult:
     error: dict | None = None             # 失败时: {'type', 'code', 'message'}
     session_status: str = ''              # 会话当前状态
     answer: str = ''                      # 机器人回答全文
+    user_message: dict | None = None      # 已入库的访客消息
     bot_message: dict | None = None       # 已入库的机器人消息
     need_human: bool = False              # 是否转人工
 
@@ -46,6 +48,7 @@ class ChatService:
             pending_prompt=str(self._config.get('bot.pending_prompt')),
         )
         self._ws_manager = WsManager.instance()
+        self._staff_ws = StaffWsManager.instance()
         # 限流器: 聊天消息每会话限流
         self._chat_limiter = RateLimiter(
             int(self._config.get('rate_limit.chat_per_minute', 20)), 60.0)
@@ -66,8 +69,8 @@ class ChatService:
         if not allowed:
             from aiservice.common.exceptions import RateLimitError
             raise RateLimitError(f'操作过于频繁, 请 {retry_after}s 后再试', retry_after)
-        session_id = self._session_dao.create(visitor_name or '访客')
-        self._logger.info(f'创建会话: id={session_id} 访客={visitor_name or "访客"} ip={client_ip}')
+        session_id = self._session_dao.create(visitor_name or '来访者')
+        self._logger.info(f'创建会话: id={session_id} 来访者={visitor_name or "来访者"} ip={client_ip}')
         return self._session_dao.get(session_id)
 
     def history(self, session_id: int) -> list[dict]:
@@ -97,8 +100,19 @@ class ChatService:
         if not result.ok:
             await websocket.send_json(result.error)
             return
+
+        # ---- 实时推送给客服工作台 (替代轮询): 新消息 + 会话摘要 ----
+        if result.user_message:
+            await self._staff_ws.publish_message(result.user_message)
+        if result.bot_message:
+            await self._staff_ws.publish_message(result.bot_message)
+        if result.user_message or result.bot_message:
+            session = await loop.run_in_executor(None, self._session_dao.get, session_id)
+            if session:
+                await self._staff_ws.publish_session(session)
+
         if result.session_status == SessionStatus.HUMAN:
-            # 人工接管中: 用户消息已入库, 客服端通过轮询可见, 提示访客即可
+            # 人工接管中: 用户消息已入库并推送工作台, 提示访客即可
             await websocket.send_json({'type': WsType.SESSION_STATUS, 'status': SessionStatus.HUMAN})
             return
         # 机器人流式输出 (模拟大模型 token 流)
@@ -135,12 +149,18 @@ class ChatService:
                 'message': '会话已结束, 请刷新页面创建新会话'})
 
         # 3. 用户消息入库 + 刷新会话活动时间
-        self._message_dao.add(session_id, MessageRole.USER, content)
+        user_message_id = self._message_dao.add(session_id, MessageRole.USER, content)
         self._session_dao.touch(session_id)
+        user_message = {
+            'id': user_message_id, 'session_id': session_id,
+            'role': MessageRole.USER, 'content': content,
+            'source': None, 'rating': None,
+        }
 
-        # 4. 状态分流: 人工接管中的会话, 消息留给客服(客服端轮询可见)
+        # 4. 状态分流: 人工接管中的会话, 消息留给客服(工作台实时推送可见)
         if session['status'] == SessionStatus.HUMAN:
-            return _ChatResult(ok=True, session_status=SessionStatus.HUMAN)
+            return _ChatResult(ok=True, session_status=SessionStatus.HUMAN,
+                               user_message=user_message)
 
         # 5. 机器人接待: 取追问上下文 -> 引擎计算
         pending = self._get_pending(session_id)
@@ -165,7 +185,8 @@ class ChatService:
         if reply.need_human:
             self._session_dao.update_status(session_id, SessionStatus.WAITING_HUMAN)
 
-        return _ChatResult(ok=True, answer=reply.answer, bot_message=bot_message,
+        return _ChatResult(ok=True, answer=reply.answer,
+                           user_message=user_message, bot_message=bot_message,
                            need_human=reply.need_human)
 
     # ---------------- 内部工具 ----------------

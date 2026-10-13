@@ -3,201 +3,462 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SmartService - 客服工作台</title>
+<title>心聆 MindEcho · 咨询师工作台</title>
 <style>
+    /* ============================================================
+       心聆 MindEcho 配色: 主色 #5B7CFA(蓝紫) / 辅色 #58C1A6(青绿)
+       背景浅灰蓝 #F5F7FC, 圆角卡片风格
+       ============================================================ */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-        font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
-        background: #f0f2f5;
+        font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+        background: #F5F7FC;
         height: 100vh;
         display: flex;
         flex-direction: column;
+        overflow: hidden;
+        color: #2A3352;
     }
+    button { font-family: inherit; }
+
+    /* ---------- 顶部导航 ---------- */
     .header {
-        background: #2b3648; color: #fff; padding: 12px 20px;
-        display: flex; align-items: center; justify-content: space-between;
+        flex-shrink: 0;
+        background: #fff;
+        border-bottom: 1px solid #E9EDF7;
+        padding: 10px 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 1px 6px rgba(60, 80, 160, 0.05);
     }
-    .header h1 { font-size: 16px; }
-    .header .tabs button {
-        background: transparent; border: none; color: #9fb0c8; padding: 6px 14px;
-        cursor: pointer; font-size: 14px;
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-logo {
+        width: 32px; height: 32px; border-radius: 10px;
+        background: linear-gradient(135deg, #5B7CFA, #8B6CF9);
+        color: #fff; font-size: 17px; font-weight: 700;
+        display: flex; align-items: center; justify-content: center;
     }
-    .header .tabs button.active { color: #fff; border-bottom: 2px solid #4f6ef7; }
-    .header .user { font-size: 13px; color: #9fb0c8; }
-    /* 登录页 */
-    .login-wrap { flex: 1; display: flex; align-items: center; justify-content: center; }
+    .brand-title { font-size: 15px; font-weight: 700; color: #2A3352; }
+    .brand-title .bd { color: #B7BED4; font-weight: 400; margin: 0 5px; }
+    .header .user {
+        font-size: 12.5px; color: #5A6482;
+        background: #F2F5FC; border-radius: 999px; padding: 6px 14px;
+    }
+
+    /* ---------- 主内容区 (登录/工作台/统计/知识库 切换) ---------- */
+    .main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+    /* ---------- 登录页 ---------- */
+    .login-wrap {
+        flex: 1;
+        display: flex; align-items: center; justify-content: center;
+        background: linear-gradient(160deg, #EDF3FE 0%, #F5F7FC 50%, #E7F6F1 100%);
+    }
     .login-card {
-        background: #fff; padding: 36px 40px; border-radius: 12px;
-        box-shadow: 0 2px 12px rgba(0,0,0,.1); width: 340px; text-align: center;
+        background: #fff; width: 360px; border-radius: 16px; padding: 34px 36px 26px;
+        text-align: center;
+        box-shadow: 0 12px 34px rgba(80, 100, 190, 0.12);
+        border: 1px solid #EDF0F8;
     }
-    .login-card h2 { margin-bottom: 22px; font-size: 18px; }
+    .login-logo {
+        width: 46px; height: 46px; border-radius: 14px; margin: 0 auto 12px;
+        background: linear-gradient(135deg, #5B7CFA, #8B6CF9);
+        color: #fff; font-size: 24px; font-weight: 700;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .login-card h2 { font-size: 19px; font-weight: 700; color: #2A3352; }
+    .login-card .login-sub { font-size: 12.5px; color: #7C86A5; margin: 6px 0 20px; }
     .login-card input {
-        width: 100%; border: 1px solid #ddd; border-radius: 6px;
-        padding: 10px 12px; font-size: 14px; margin-bottom: 12px; outline: none;
+        width: 100%; border: 1px solid #E1E6F2; border-radius: 10px;
+        padding: 11px 13px; font-size: 13.5px; margin-bottom: 12px;
+        background: #FAFBFE; outline: none; color: #2A3352;
     }
-    .login-card button {
-        width: 100%; border: none; border-radius: 6px; background: #4f6ef7;
-        color: #fff; padding: 10px; font-size: 14px; cursor: pointer;
+    .login-card input:focus { border-color: #5B7CFA; background: #fff; box-shadow: 0 0 0 3px rgba(91, 124, 250, 0.13); }
+    .login-card .login-btn {
+        width: 100%; border: none; border-radius: 10px; padding: 11px;
+        font-size: 15px; font-weight: 600; color: #fff; cursor: pointer; letter-spacing: 4px;
+        background: linear-gradient(135deg, #5B7CFA, #7E96FB);
     }
-    .login-tip { color: #e6a23c; font-size: 12px; margin-top: 10px; }
-    /* 工作台 */
-    .workspace { flex: 1; display: flex; overflow: hidden; }
+    .login-card .login-btn:hover { background: linear-gradient(135deg, #4666E3, #6E86F0); }
+    .login-tip { font-size: 12px; margin-top: 14px; color: #8A93B2; }
+    .login-tip.err { color: #E05C5C; }
+
+    /* ---------- 工作台: 左会话列表 + 右聊天面板 ---------- */
+    .workspace { flex: 1; min-height: 0; display: flex; background: #F5F7FC; }
     .session-panel {
-        width: 300px; background: #fff; border-right: 1px solid #eee;
-        display: flex; flex-direction: column;
+        width: 300px; flex-shrink: 0; background: #fff;
+        border-right: 1px solid #E9EDF7;
+        display: flex; flex-direction: column; min-height: 0;
     }
-    .session-panel .panel-title { padding: 12px 16px; font-size: 14px; color: #666; border-bottom: 1px solid #f0f0f0; }
-    .session-list { flex: 1; overflow-y: auto; }
-    .session-item {
-        padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #f7f7f7;
+    .panel-head {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 12px 14px 4px 16px;
     }
-    .session-item:hover { background: #f7f9ff; }
-    .session-item.active { background: #eef2ff; }
-    .session-item .s-name { font-size: 14px; margin-bottom: 4px; }
-    .session-item .s-meta { font-size: 12px; color: #999; }
-    .empty-tip { text-align: center; color: #bbb; font-size: 13px; padding: 40px 0; }
-    .chat-panel { flex: 1; display: flex; flex-direction: column; background: #f7f8fa; }
+    .panel-head .panel-title { font-size: 14px; font-weight: 700; color: #2A3352; }
+    /* 实时推送连接状态灯: 绿=已连接 / 橙=重连中 / 灰=连接中 */
+    .push-state {
+        display: inline-flex; align-items: center; gap: 5px;
+        font-size: 11px; color: #8A93B2;
+    }
+    .push-state .dot {
+        width: 8px; height: 8px; border-radius: 50%;
+        background: #C3CADD;
+    }
+    .push-state.on { color: #2FA57C; }
+    .push-state.on .dot { background: #35C08E; box-shadow: 0 0 0 3px rgba(53, 192, 142, 0.18); }
+    .push-state.off { color: #C77C16; }
+    .push-state.off .dot { background: #F5A623; box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.18); animation: blink 1.1s infinite; }
+    @keyframes blink { 50% { opacity: 0.35; } }
+
+    /* 状态筛选按钮 (待接入/接待中/已结束) */
+    .status-filters {
+        display: flex; gap: 6px; padding: 10px 12px 12px;
+        border-bottom: 1px solid #EEF0F7;
+    }
+    .filter-btn {
+        flex: 1; border: none; border-radius: 999px; padding: 6px 0;
+        background: #F0F3FA; color: #5A6482; font-size: 12px; cursor: pointer;
+        transition: all .18s;
+    }
+    .filter-btn:hover { background: #E6EBF7; color: #5B7CFA; }
+    .filter-btn.active {
+        background: #5B7CFA; color: #fff; font-weight: 600;
+        box-shadow: 0 2px 8px rgba(91, 124, 250, 0.35);
+    }
+
+    .session-list { flex: 1; overflow-y: auto; min-height: 0; }
+    .session-item { padding: 12px 14px; cursor: pointer; border-bottom: 1px solid #F5F7FB; transition: background .15s; }
+    .session-item:hover { background: #F7F9FE; }
+    .session-item.active { background: #EDF2FE; border-right: 3px solid #5B7CFA; }
+    .session-item .s-name { font-size: 13.5px; font-weight: 600; color: #2A3352; margin-bottom: 4px; }
+    .session-item .s-meta { font-size: 11.5px; color: #9AA3BE; }
+    .session-item .s-meta .st { color: #5B7CFA; }
+    .session-item .s-meta .st.finish { color: #8A93B2; }
+    .empty-tip { text-align: center; color: #B7BED4; font-size: 13px; padding: 46px 16px; line-height: 2; }
+
+    /* ---------- 聊天面板 ---------- */
+    .chat-panel { flex: 1; min-width: 0; display: flex; flex-direction: column; background: #F5F7FC; }
     .chat-header {
-        background: #fff; padding: 12px 20px; font-size: 14px;
-        border-bottom: 1px solid #eee; display: flex; justify-content: space-between;
+        flex-shrink: 0; background: #fff;
+        padding: 12px 18px; border-bottom: 1px solid #E9EDF7;
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
     }
-    .chat-header button {
-        border: 1px solid #ddd; background: #fff; border-radius: 4px;
-        padding: 4px 12px; cursor: pointer; font-size: 12px;
+    .chat-title { display: flex; align-items: center; min-width: 0; gap: 10px; }
+    #chatTitle {
+        font-size: 14.5px; font-weight: 700; color: #2A3352;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .messages { flex: 1; overflow-y: auto; padding: 20px; }
-    .msg-row { display: flex; margin-bottom: 12px; }
-    .msg-row.user { justify-content: flex-start; }
-    .msg-row.staff { justify-content: flex-end; }
+    .chat-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    /* 会话状态徽章 (胶囊) */
+    .status-badge {
+        display: inline-block; padding: 3px 13px; border-radius: 999px;
+        font-size: 12px; font-weight: 600; white-space: nowrap;
+    }
+    .badge-human    { background: #E2F6ED; color: #149A63; border: 1px solid #BCEBD6; }   /* 已接入 */
+    .badge-waiting  { background: #FDF1DC; color: #C07914; border: 1px solid #F5DFAF; }   /* 待接入 */
+    .badge-bot      { background: #E9EEFD; color: #4666E3; border: 1px solid #C8D4FB; }   /* 助手接待中 */
+    .badge-closed   { background: #EDEFF4; color: #7A839C; border: 1px solid #D8DCE7; }   /* 已结束 */
+    .action-btn {
+        border: none; border-radius: 999px; padding: 7px 16px;
+        font-size: 12.5px; font-weight: 600; cursor: pointer;
+        transition: all .18s;
+    }
+    .action-btn.take { background: #5B7CFA; color: #fff; }
+    .action-btn.take:hover { background: #4666E3; }
+    .action-btn.close { background: #FFF4F4; color: #E05C5C; border: 1px solid #F3CFCF; }
+    .action-btn.close:hover { background: #FBE7E7; }
+    .action-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+    /* 会话已结束提示条 */
+    .closed-banner {
+        flex-shrink: 0; padding: 7px 16px; font-size: 12px; text-align: center;
+        color: #7A839C; background: #F1F3F8; border-bottom: 1px solid #E3E7F1;
+    }
+
+    /* 消息区 */
+    .messages { flex: 1; overflow-y: auto; padding: 18px 20px; min-height: 0; }
+    .chat-empty { text-align: center; color: #B7BED4; font-size: 13px; padding: 60px 0; }
+    .msg-row { display: flex; flex-direction: column; margin-bottom: 14px; }
+    .msg-row.user { align-items: flex-start; }
+    .msg-row.bot { align-items: flex-start; }
+    .msg-row.staff { align-items: flex-end; }
+    .msg-row .role-tag { font-size: 11px; color: #9AA3BE; margin-bottom: 4px; }
+    .msg-row.bot .role-tag { color: #2FA57C; }
     .bubble {
-        max-width: 66%; padding: 9px 13px; border-radius: 10px;
-        font-size: 13px; line-height: 1.7; white-space: pre-wrap; word-break: break-word;
+        max-width: 70%; padding: 9px 14px; font-size: 13.5px; line-height: 1.75;
+        white-space: pre-wrap; word-break: break-word; border-radius: 14px;
     }
-    .msg-row.user .bubble { background: #fff; color: #333; border-top-left-radius: 2px; }
-    .msg-row.staff .bubble { background: #4f6ef7; color: #fff; border-top-right-radius: 2px; }
-    .msg-row .role-tag { font-size: 11px; color: #999; margin-bottom: 3px; }
-    .msg-row.staff .role-tag { text-align: right; }
-    .reply-area { display: flex; background: #fff; padding: 12px; border-top: 1px solid #eee; }
-    .reply-area input {
-        flex: 1; border: 1px solid #ddd; border-radius: 6px; padding: 10px 14px;
-        font-size: 13px; outline: none;
+    .msg-row.user .bubble {
+        background: #fff; color: #2A3352;
+        border: 1px solid #E9EDF7;
+        border-top-left-radius: 4px;
+        box-shadow: 0 1px 3px rgba(70, 90, 160, 0.05);
     }
-    .reply-area button {
-        margin-left: 10px; border: none; border-radius: 6px; background: #4f6ef7;
-        color: #fff; padding: 0 22px; cursor: pointer; font-size: 13px;
+    .msg-row.bot .bubble {
+        background: #E8F6F0; color: #176B57;
+        border: 1px solid #CDE9DC;
+        border-top-left-radius: 4px;
     }
-    /* 知识库 / 统计 面板 */
-    .panel-page { display: none; flex: 1; overflow-y: auto; padding: 20px; background: #f7f8fa; }
+    .msg-row.staff .bubble {
+        background: linear-gradient(135deg, #5B7CFA, #6F8BF7); color: #fff;
+        border-top-right-radius: 4px;
+        box-shadow: 0 2px 8px rgba(91, 124, 250, 0.28);
+    }
+    .msg-row.staff .role-tag { color: #8A93B2; }
+
+    /* ---------- 回复输入区 (textarea + AI 润色/发送) ---------- */
+    .reply-area {
+        flex-shrink: 0; background: #fff; border-top: 1px solid #E9EDF7;
+        padding: 10px 16px 14px;
+    }
+    .composer-actions { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .polish-btn {
+        border: 1px solid #CBD6FE; background: #F2F5FF; color: #5B7CFA;
+        border-radius: 999px; padding: 6px 13px; font-size: 12.5px;
+        cursor: pointer; transition: all .18s; white-space: nowrap;
+    }
+    .polish-btn:hover { background: #E6EDFF; border-color: #A9BCF9; }
+    .polish-btn:disabled { opacity: .55; cursor: not-allowed; }
+    .polish-hint {
+        font-size: 11.5px; color: #C07914; flex: 1; min-width: 0;
+        opacity: 0; transition: opacity .5s; white-space: nowrap;
+        overflow: hidden; text-overflow: ellipsis;
+    }
+    .polish-hint.show { opacity: 1; }
+    .composer-actions .send-btn {
+        margin-left: auto; flex-shrink: 0; border: none; border-radius: 999px;
+        background: #5B7CFA; color: #fff; padding: 7px 22px;
+        font-size: 13px; font-weight: 600; cursor: pointer; transition: background .18s;
+    }
+    .composer-actions .send-btn:hover { background: #4666E3; }
+    .composer-actions .send-btn:disabled { background: #BCC6EA; cursor: not-allowed; }
+    #replyInput {
+        width: 100%; resize: none; font-size: 13.5px; line-height: 1.7;
+        border: 1px solid #E1E6F2; border-radius: 10px; padding: 9px 13px;
+        background: #FAFBFE; outline: none; color: #2A3352; font-family: inherit;
+    }
+    #replyInput:focus { border-color: #5B7CFA; background: #fff; box-shadow: 0 0 0 3px rgba(91, 124, 250, 0.12); }
+    .reply-area.composer-off #replyInput { background: #F2F4F9; color: #9AA3BE; }
+    .reply-area.composer-off .polish-btn { background: #F3F5FA; color: #9AA3BE; border-color: #E3E7F2; }
+
+    /* ---------- 统计 / 知识库页 (卡片风格) ---------- */
+    .panel-page { flex: 1; min-height: 0; display: none; overflow-y: auto; padding: 20px; background: #F5F7FC; }
     .panel-page.active { display: block; }
     .card {
-        background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 16px;
-        box-shadow: 0 1px 6px rgba(0,0,0,.05);
+        background: #fff; border-radius: 12px; padding: 18px; margin-bottom: 16px;
+        border: 1px solid #EDF0F8;
+        box-shadow: 0 2px 8px rgba(70, 90, 160, 0.05);
     }
-    .card h3 { font-size: 14px; margin-bottom: 12px; }
+    .card h3 { font-size: 14px; font-weight: 600; color: #3A4468; margin-bottom: 12px; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { border-bottom: 1px solid #f0f0f0; padding: 8px 10px; text-align: left; }
-    th { color: #666; font-weight: 500; }
+    th, td { border-bottom: 1px solid #F0F2F8; padding: 9px 10px; text-align: left; }
+    th { color: #7C86A5; font-weight: 500; background: #FAFBFE; }
     .stat-grid { display: flex; gap: 16px; flex-wrap: wrap; }
     .stat-card {
-        background: #fff; border-radius: 8px; padding: 18px; min-width: 150px;
-        box-shadow: 0 1px 6px rgba(0,0,0,.05);
+        background: #fff; border-radius: 12px; padding: 18px; min-width: 150px;
+        border: 1px solid #EDF0F8;
+        box-shadow: 0 2px 8px rgba(70, 90, 160, 0.05);
     }
-    .stat-card .value { font-size: 24px; font-weight: 600; color: #4f6ef7; }
-    .stat-card .label { font-size: 12px; color: #999; margin-top: 4px; }
+    .stat-card .value { font-size: 24px; font-weight: 700; color: #5B7CFA; }
+    .stat-card .label { font-size: 12px; color: #8A93B2; margin-top: 5px; }
     .form-row { display: flex; gap: 10px; margin-bottom: 10px; }
     .form-row input, .form-row textarea {
-        flex: 1; border: 1px solid #ddd; border-radius: 6px; padding: 8px 12px;
-        font-size: 13px; outline: none; font-family: inherit;
+        flex: 1; border: 1px solid #E1E6F2; border-radius: 8px; padding: 9px 12px;
+        font-size: 13px; background: #FAFBFE; outline: none; font-family: inherit; color: #2A3352;
     }
-    .form-row button {
-        border: none; border-radius: 6px; background: #4f6ef7; color: #fff;
-        padding: 0 20px; cursor: pointer; font-size: 13px;
+    .form-row input:focus, .form-row textarea:focus { border-color: #5B7CFA; background: #fff; }
+    .form-row button { border: none; border-radius: 8px; background: #5B7CFA; color: #fff; padding: 0 22px; cursor: pointer; font-size: 13px; }
+    .form-row button:hover { background: #4666E3; }
+    .form-row button.ghost { background: #EEF1FB; color: #5B7CFA; }
+    .form-row button.ghost:hover { background: #E1E6FA; }
+    .form-row button.primary-green { background: #58C1A6; }
+    .form-row button.primary-green:hover { background: #43AB90; }
+    .form-row select { border: 1px solid #E1E6F2; border-radius: 8px; padding: 9px 12px; font-size: 13px; background: #FAFBFE; color: #2A3352; }
+    .kw-col { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .op-cell { white-space: nowrap; }
+    .del-btn { color: #E05C5C; cursor: pointer; }
+    .edit-btn { color: #5B7CFA; cursor: pointer; margin-right: 10px; }
+    .edit-btn:hover { text-decoration: underline; }
+    .del-btn:hover { text-decoration: underline; }
+    .k-form-hint { font-size: 12px; color: #8A93B2; margin: -6px 0 10px; }
+
+    /* ---------- 底部标签页 (会话工作台/统计报表/知识库管理) ---------- */
+    .tab-bar {
+        flex-shrink: 0; height: 48px; background: #fff;
+        border-top: 1px solid #E9EDF7;
+        display: flex; align-items: stretch;
     }
-    .del-btn { color: #e05c5c; cursor: pointer; }
+    .tab-btn {
+        flex: 1; border: none; background: transparent; cursor: pointer;
+        color: #7C86A5; font-size: 13px;
+        display: flex; align-items: center; justify-content: center; gap: 6px;
+        border-top: 2px solid transparent; transition: color .15s;
+    }
+    .tab-btn:hover { color: #5B7CFA; }
+    .tab-btn.active { color: #5B7CFA; font-weight: 700; border-top-color: #5B7CFA; background: rgba(91, 124, 250, 0.05); }
 </style>
 </head>
 <body>
+
+<!-- ========== 顶部导航 ========== -->
 <div class="header">
-    <h1>SmartService 客服工作台</h1>
-    <div class="tabs">
-        <button class="active" onclick="showPage('chat')">会话工作台</button>
-        <button onclick="showPage('stats')">统计报表</button>
-        <button onclick="showPage('knowledge')">知识库管理</button>
+    <div class="brand">
+        <span class="brand-logo">心</span>
+        <h1 class="brand-title">心聆 MindEcho<span class="bd">·</span>咨询师工作台</h1>
     </div>
     <span class="user" id="userInfo"></span>
 </div>
 
-<!-- 登录页 -->
-<div class="login-wrap" id="loginWrap">
-    <div class="login-card">
-        <h2>客服登录</h2>
-        <input id="username" placeholder="用户名 (admin)">
-        <input id="password" type="password" placeholder="密码 (123456)">
-        <button onclick="doLogin()">登录</button>
-        <div class="login-tip" id="loginTip"></div>
+<!-- ========== 主内容区 ========== -->
+<div class="main" id="mainArea">
+
+    <!-- 登录页 -->
+    <div class="login-wrap" id="loginWrap">
+        <div class="login-card">
+            <div class="login-logo">心</div>
+            <h2>咨询师登录</h2>
+            <p class="login-sub">心聆 MindEcho · 心理咨询服务平台</p>
+            <input id="username" placeholder="用户名 (演示: admin)" autocomplete="username">
+            <input id="password" type="password" placeholder="密码 (演示: 123456)" autocomplete="current-password">
+            <button class="login-btn" onclick="doLogin()">登录</button>
+            <div class="login-tip" id="loginTip">演示账号 admin / 123456</div>
+        </div>
+    </div>
+
+    <!-- 会话工作台: 左(300px 会话列表) + 右(聊天面板) -->
+    <div class="workspace" id="workspace" style="display:none">
+        <aside class="session-panel">
+            <div class="panel-head">
+                <!-- 面板标题 = 当前筛选 + 实时推送连接状态灯 -->
+                <div class="panel-title" id="panelTitle">待接入会话</div>
+                <span class="push-state" id="pushState"><i class="dot"></i><span class="state-text">连接中…</span></span>
+            </div>
+            <div class="status-filters" id="statusFilters">
+                <button class="filter-btn active" data-status="waiting_human" onclick="setStatusFilter('waiting_human')">待接入</button>
+                <button class="filter-btn" data-status="human" onclick="setStatusFilter('human')">接待中</button>
+                <button class="filter-btn" data-status="closed" onclick="setStatusFilter('closed')">已结束</button>
+            </div>
+            <div class="session-list" id="sessionList"></div>
+        </aside>
+
+        <section class="chat-panel" id="chatPanel">
+            <!-- 聊天头部: 会话 #id · 来访者名 + 状态徽章 + 操作按钮 -->
+            <div class="chat-header">
+                <div class="chat-title">
+                    <span id="chatTitle">请选择左侧会话</span>
+                    <span class="status-badge" id="statusBadge" style="display:none"></span>
+                </div>
+                <div class="chat-actions">
+                    <button class="action-btn take" id="takeoverBtn" onclick="takeoverSession()" style="display:none">接入会话</button>
+                    <button class="action-btn close" id="closeBtn" onclick="closeSession()" style="display:none">结束会话</button>
+                </div>
+            </div>
+            <!-- 已结束提示条: 会话关闭后出现, 提示无法继续回复 -->
+            <div class="closed-banner" id="closedBanner" style="display:none">⛔ 本会话已结束，无法继续回复</div>
+            <!-- 消息流 -->
+            <div class="messages" id="staffMessages">
+                <div class="chat-empty" id="chatEmpty">从左侧选择一位来访者的会话，开始接待</div>
+            </div>
+            <!-- 回复输入区: AI 润色 + 发送 (仅接待中的会话可用) -->
+            <div class="reply-area" id="replyArea">
+                <div class="composer-actions">
+                    <button class="polish-btn" id="polishBtn" onclick="polishDraft()" disabled>✨ AI 润色</button>
+                    <span class="polish-hint" id="polishHint"></span>
+                    <button class="send-btn" id="sendBtn" onclick="sendReply()" disabled>发送</button>
+                </div>
+                <textarea id="replyInput" rows="2" placeholder="请先选择会话" disabled></textarea>
+            </div>
+        </section>
+    </div>
+
+    <!-- 统计报表页 -->
+    <div class="panel-page" id="statsPage">
+        <div class="stat-grid" id="statGrid"></div>
+    </div>
+
+    <!-- 知识库管理页 -->
+    <div class="panel-page" id="knowledgePage">
+        <div class="card">
+            <h3 id="kFormTitle">新增知识条目</h3>
+            <div class="k-form-hint" id="kFormHint"></div>
+            <div class="form-row">
+                <input id="kCategory" placeholder="分类 (如: 情绪疏导)">
+                <input id="kQuestion" placeholder="标准问题 (如: 最近总是失眠怎么办)">
+            </div>
+            <div class="form-row">
+                <input id="kKeywords" placeholder="关键词, 逗号分隔 (如: 失眠,焦虑,睡眠) —— 助手按包含匹配">
+            </div>
+            <div class="form-row">
+                <textarea id="kAnswer" rows="3" placeholder="标准答案 (供心聆助手检索回答)"></textarea>
+            </div>
+            <div class="form-row" id="kEnabledRow" style="display:none">
+                <label style="line-height:34px;color:#7C86A5;font-size:13px">启用状态</label>
+                <select id="kEnabled">
+                    <option value="1">启用 (可被心聆助手检索)</option>
+                    <option value="0">停用 (暂不参与检索)</option>
+                </select>
+                <span style="flex:1"></span>
+            </div>
+            <div class="form-row">
+                <button id="kSaveBtn" class="primary-green" onclick="saveKnowledge()">新增</button>
+                <button id="kCancelBtn" class="ghost" onclick="cancelKnowledgeEdit()" style="display:none">取消编辑</button>
+            </div>
+        </div>
+        <div class="card">
+            <h3>知识库列表 (点击"编辑"可回填修改, 关键词即助手检索的匹配词)</h3>
+            <table>
+                <thead><tr>
+                    <th>ID</th><th>分类</th><th>标准问题</th><th>关键词</th><th>命中</th><th>启用</th><th>操作</th>
+                </tr></thead>
+                <tbody id="knowledgeBody"></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-<!-- 工作台 -->
-<div class="workspace" id="workspace" style="display:none">
-    <div class="session-panel">
-        <div class="panel-title">会话列表 (每 5 秒自动刷新)</div>
-        <div class="session-list" id="sessionList"></div>
-    </div>
-    <div class="chat-panel" id="chatPanel">
-        <div class="chat-header">
-            <span id="chatTitle">请选择左侧会话</span>
-            <span>
-                <button onclick="takeoverSession()" style="margin-right:6px">接管会话</button>
-                <button onclick="closeSession()">关闭会话</button>
-            </span>
-        </div>
-        <div class="messages" id="staffMessages"></div>
-        <div class="reply-area">
-            <input id="replyInput" placeholder="输入回复内容 (需先接管会话)" autocomplete="off">
-            <button onclick="sendReply()">发送</button>
-        </div>
-    </div>
-</div>
-
-<!-- 统计页 -->
-<div class="panel-page" id="statsPage">
-    <div class="stat-grid" id="statGrid"></div>
-</div>
-
-<!-- 知识库页 -->
-<div class="panel-page" id="knowledgePage">
-    <div class="card">
-        <h3>新增知识条目</h3>
-        <div class="form-row">
-            <input id="kCategory" placeholder="分类 (如: 课程)">
-            <input id="kQuestion" placeholder="标准问题 (如: 课程怎么收费)">
-        </div>
-        <div class="form-row">
-            <input id="kKeywords" placeholder="关键词, 逗号分隔 (如: 学费,价格,多少钱)">
-        </div>
-        <div class="form-row">
-            <textarea id="kAnswer" rows="3" placeholder="标准答案"></textarea>
-        </div>
-        <div class="form-row"><button onclick="addKnowledge()">新增</button></div>
-    </div>
-    <div class="card">
-        <h3>知识库列表 (点击"删除"可移除条目)</h3>
-        <table>
-            <thead><tr><th>ID</th><th>分类</th><th>标准问题</th><th>命中次数</th><th>启用</th><th>操作</th></tr></thead>
-            <tbody id="knowledgeBody"></tbody>
-        </table>
-    </div>
+<!-- ========== 底部标签页 ========== -->
+<div class="tab-bar" id="tabBar" style="display:none">
+    <button class="tab-btn active" data-page="chat" onclick="showPage('chat')">💬 会话工作台</button>
+    <button class="tab-btn" data-page="stats" onclick="showPage('stats')">📊 统计报表</button>
+    <button class="tab-btn" data-page="knowledge" onclick="showPage('knowledge')">📚 知识库管理</button>
 </div>
 
 <script>
+    // ============================================================
+    // 心聆 MindEcho · 咨询师工作台 (staff.html)
+    // ------------------------------------------------------------
+    // 与后端交互 (协议保持不变):
+    //   REST (所有 /api/staff 请求带请求头 X-Staff-Id: <staffId>):
+    //     POST /api/staff/login {"username","password"} → data{id,username,display_name}
+    //     GET  /api/staff/sessions?status=waiting_human|human|closed|bot   (全量拉取兜底)
+    //     GET  /api/staff/sessions/{id}/messages?after_id=N                (增量拉取历史/补齐)
+    //     POST /api/staff/sessions/{id}/takeover  /reply {"content"} /close
+    //     POST /api/staff/sessions/{id}/polish    → data{draft,engine,note,knowledge_id,question}  (AI 润色)
+    //     GET  /api/staff/stats ; GET/POST/PUT/DELETE /api/staff/knowledge(...)
+    //   WebSocket /ws/staff?staff_id={id} (实时推送, 无轮询):
+    //     心跳 {"type":"ping"} 每 30 秒; onclose 3 秒自动重连;
+    //     onopen 全量 loadSessions() + 选中会话时 pollMessages() 补齐;
+    //     服务端推送: {"type":"staff_session","session":{...}} / {"type":"staff_message","message":{...}}
+    // ============================================================
+
     // ============ 全局状态 ============
-    let staffId = localStorage.getItem('staffId') || null;
-    let currentSession = null;      // 当前选中的会话
-    let lastMessageId = 0;          // 轮询游标
-    let statusFilter = 'waiting_human';
+    let staffId = localStorage.getItem('staffId') || null;   // 咨询师 id (登录成功后写 localStorage)
+    let currentSession = null;          // 当前选中的会话
+    let lastMessageId = 0;              // 消息游标 (断线重连后从其后增量补齐)
+    let statusFilter = 'waiting_human'; // 当前状态筛选: waiting_human | human | closed
+    let sessions = [];                  // 当前筛选下的会话缓存 (由 WebSocket 推送增量维护)
+    let staffWs = null;                 // 工作台实时推送 WebSocket
+
+    // 状态筛选按钮配置
+    const STATUS_FILTERS = [
+        { status: 'waiting_human', label: '待接入' },
+        { status: 'human',        label: '接待中' },
+        { status: 'closed',       label: '已结束' },
+    ];
 
     // ============ 工具 ============
+    // 统一 REST 请求: 自动带 X-Staff-Id 请求头, 只认 {code:200, data} 结构
     async function api(path, options = {}) {
         const headers = { 'Content-Type': 'application/json' };
         if (staffId) headers['X-Staff-Id'] = staffId;
@@ -207,10 +468,38 @@
         return data.data;
     }
 
+    // 会话状态 → 中文 (列表/徽章/统计共用)
+    function statusName(status) {
+        return {
+            bot: '心聆助手接待中',
+            waiting_human: '待接入',
+            human: '接待中',
+            closed: '已结束',
+            archived: '已归档',
+        }[status] || status;
+    }
+
+    // 会话状态 → 徽章文案 + 徽章样式类 (由 updateChatHeader 集中维护)
+    function badgeInfo(status) {
+        return {
+            human:         { text: '已接入',     cls: 'badge-human' },
+            waiting_human: { text: '待接入',     cls: 'badge-waiting' },
+            bot:           { text: '助手接待中', cls: 'badge-bot' },
+            closed:        { text: '已结束',     cls: 'badge-closed' },
+        }[status] || { text: statusName(status), cls: 'badge-closed' };
+    }
+
+    // 时间格式化: "2025-01-01T10:00:00" → "2025-01-01 10:00"
+    function fmtTime(t) {
+        return (t || '').replace('T', ' ').slice(0, 16);
+    }
+
+    // 底部标签页切换 (会话工作台 / 统计报表 / 知识库管理)
     function showPage(page) {
-        document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
-        event.target.classList.add('active');
-        document.getElementById('chatPanel').parentElement.style.display = page === 'chat' ? 'flex' : 'none';
+        document.querySelectorAll('.tab-btn').forEach(function (b) {
+            b.classList.toggle('active', b.getAttribute('data-page') === page);
+        });
+        document.getElementById('workspace').style.display = page === 'chat' ? 'flex' : 'none';
         document.getElementById('statsPage').classList.toggle('active', page === 'stats');
         document.getElementById('knowledgePage').classList.toggle('active', page === 'knowledge');
         if (page === 'stats') loadStats();
@@ -230,89 +519,217 @@
             const data = await resp.json();
             if (data.code !== 200) throw new Error(data.message);
             staffId = data.data.id;
-            localStorage.setItem('staffId', staffId);
+            localStorage.setItem('staffId', staffId);   // 成功后写本地
+            document.getElementById('loginTip').textContent = '';
             enterWorkspace(data.data);
         } catch (e) {
-            document.getElementById('loginTip').textContent = e.message;
+            const tip = document.getElementById('loginTip');
+            tip.textContent = '登录失败: ' + e.message;
+            tip.className = 'login-tip err';
         }
     }
 
+    // 进入工作台: 显示工作台与底部标签页, 首屏全量拉取 + 建立实时推送
     function enterWorkspace(staff) {
         document.getElementById('loginWrap').style.display = 'none';
         document.getElementById('workspace').style.display = 'flex';
-        document.getElementById('userInfo').textContent = staff.display_name + ' (' + staff.username + ')';
-        setInterval(refreshSessions, 5000);   // 会话列表轮询
-        refreshSessions();
+        document.getElementById('tabBar').style.display = 'flex';
+        document.getElementById('userInfo').textContent =
+            '咨询师 · ' + (staff.display_name || '') + ' (' + staff.username + ')';
+        loadSessions();            // 首次全量加载 (登录兜底)
+        connectStaffWs();          // 建立 WebSocket 实时推送通道
+        startStaffPing();          // 心跳保活
     }
 
-    // ============ 会话列表 ============
-    async function refreshSessions() {
+    // ============ 会话列表 (状态筛选 + 全量拉取 + WS 增量维护) ============
+    // 点击状态筛选按钮: 待接入 / 接待中 / 已结束, 切换后全量 loadSessions()
+    function setStatusFilter(status) {
+        statusFilter = status;
+        document.querySelectorAll('#statusFilters .filter-btn').forEach(function (btn) {
+            btn.classList.toggle('active', btn.getAttribute('data-status') === status);
+        });
+        updatePanelTitle();
+        loadSessions();
+    }
+
+    function currentFilterLabel() {
+        const f = STATUS_FILTERS.find(function (x) { return x.status === statusFilter; });
+        return f ? f.label : '会话';
+    }
+
+    // 面板标题 = 当前筛选 (+数量), 旁边为实时推送连接状态灯
+    function updatePanelTitle() {
+        document.getElementById('panelTitle').textContent =
+            currentFilterLabel() + '会话 (' + sessions.length + ')';
+    }
+
+    async function loadSessions() {
+        // 登录 / 切换状态页 / 断线重连时全量拉取兜底; 平时列表由 staff_session 推送增量维护
         try {
-            const sessions = await api('/api/staff/sessions?status=' + statusFilter);
-            const listBox = document.getElementById('sessionList');
-            listBox.innerHTML = '';
-            if (!sessions.length) {
-                listBox.innerHTML = '<div class="empty-tip">暂无' + statusName(statusFilter) + '的会话</div>';
-                return;
-            }
-            sessions.forEach(s => {
-                const item = document.createElement('div');
-                item.className = 'session-item' + (currentSession && currentSession.id === s.id ? ' active' : '');
-                item.innerHTML = '';
-                const name = document.createElement('div');
-                name.className = 's-name';
-                name.textContent = '#' + s.id + ' ' + s.visitor_name;
-                const meta = document.createElement('div');
-                meta.className = 's-meta';
-                meta.textContent = statusName(s.status) + ' | 更新于 ' + (s.updated_at || '').replace('T', ' ').slice(0, 16);
-                item.appendChild(name);
-                item.appendChild(meta);
-                item.onclick = () => selectSession(s);
-                listBox.appendChild(item);
+            sessions = await api('/api/staff/sessions?status=' + statusFilter);
+            renderSessionList();
+        } catch (e) { /* 静默, 等下次推送/重连 */ }
+    }
+
+    function renderSessionList() {
+        const listBox = document.getElementById('sessionList');
+        listBox.innerHTML = '';
+        updatePanelTitle();
+        if (!sessions.length) {
+            const tip = document.createElement('div');
+            tip.className = 'empty-tip';
+            tip.textContent = '暂无' + currentFilterLabel() + '的会话\n(实时推送会自动刷新列表)';
+            listBox.appendChild(tip);
+            return;
+        }
+        sessions.forEach(function (s) {
+            const item = document.createElement('div');
+            item.className = 'session-item' + (currentSession && currentSession.id === s.id ? ' active' : '');
+            const name = document.createElement('div');
+            name.className = 's-name';
+            name.textContent = '#' + s.id + ' ' + (s.visitor_name || '来访者');
+            const meta = document.createElement('div');
+            meta.className = 's-meta';
+            const st = document.createElement('span');
+            st.className = 'st' + (s.status === 'closed' ? ' finish' : '');
+            st.textContent = statusName(s.status);
+            meta.appendChild(st);
+            meta.appendChild(document.createTextNode(' · 更新于 ' + fmtTime(s.updated_at)));
+            item.appendChild(name);
+            item.appendChild(meta);
+            item.onclick = function () { selectSession(s); };
+            listBox.appendChild(item);
+        });
+    }
+
+    // 服务器推送的会话变更: 按当前 statusFilter 增/改/删并重渲染列表 (语义要点)
+    //   - 状态与当前筛选不符 → 从列表移除; 相符且不在列表 → 加入; 相符且在列表 → 合并刷新
+    //   - 按 updated_at 降序排列
+    function applySessionPush(pushed) {
+        const i = sessions.findIndex(function (s) { return s.id === pushed.id; });
+        const inList = i >= 0;
+        const matches = pushed.status === statusFilter;
+        if (inList && !matches) {
+            sessions.splice(i, 1);                        // 离开当前列表 (如被接入/被关闭)
+        } else if (!inList && matches) {
+            sessions.push(pushed);                        // 新进入列表 (如刚转待接入)
+        } else if (inList && matches) {
+            sessions[i] = Object.assign({}, sessions[i], pushed);   // 信息刷新
+        }
+        if (sessions.length) {
+            sessions.sort(function (a, b) {
+                return String(b.updated_at || '').localeCompare(String(a.updated_at || ''));
             });
-        } catch (e) { /* 静默重试 */ }
+        }
+        if (inList || matches) renderSessionList();
+        else updatePanelTitle();
+        // 若推送的是当前选中会话 → 同步标题 / 徽章 (状态来源之一)
+        if (currentSession && currentSession.id === pushed.id) {
+            Object.assign(currentSession, pushed);
+            updateChatHeader();
+        }
     }
 
-    function statusName(status) {
-        return { bot: '机器人接待中', waiting_human: '等待人工', human: '人工接待中', closed: '已关闭', archived: '已归档' }[status] || status;
-    }
-
-    // ============ 会话详情 (增量轮询) ============
+    // ============ 会话详情 (选中拉一次历史, 之后靠 WS 推送增量) ============
     function selectSession(session) {
         currentSession = session;
         lastMessageId = 0;
-        document.getElementById('chatTitle').textContent =
-            '会话 #' + session.id + ' - ' + session.visitor_name + ' (' + statusName(session.status) + ')';
-        document.getElementById('staffMessages').innerHTML = '';
-        pollMessages();
-        clearInterval(window._msgTimer);
-        window._msgTimer = setInterval(pollMessages, 3000);   // 每 3 秒增量拉取
+        updateChatHeader();               // 标题 + 状态徽章 + 输入区可用性
+        const box = document.getElementById('staffMessages');
+        box.innerHTML = '';               // 清空占位/旧消息
+        pollMessages();                   // 打开会话时拉一次历史; 之后新消息由 WebSocket 推送
     }
 
+    // 集中维护聊天头部: 标题 / 状态徽章 / 已结束提示条 / 操作按钮 / 输入区可用性
+    function updateChatHeader() {
+        const s = currentSession;
+        const titleEl = document.getElementById('chatTitle');
+        const badgeEl = document.getElementById('statusBadge');
+        const bannerEl = document.getElementById('closedBanner');
+        const takeEl = document.getElementById('takeoverBtn');
+        const closeEl = document.getElementById('closeBtn');
+        if (!s) {
+            titleEl.textContent = '请选择左侧会话';
+            badgeEl.style.display = 'none';
+            bannerEl.style.display = 'none';
+            takeEl.style.display = 'none';
+            closeEl.style.display = 'none';
+            setComposerEnabled(false);
+            return;
+        }
+        // 标题: 会话 #id · 来访者名
+        titleEl.textContent = '会话 #' + s.id + ' · ' + (s.visitor_name || '来访者');
+        // 状态徽章 (胶囊): human绿「已接入」/ waiting琥珀「待接入」/ bot蓝「助手接待中」/ closed灰「已结束」
+        const badge = badgeInfo(s.status);
+        badgeEl.textContent = badge.text;
+        badgeEl.className = 'status-badge ' + badge.cls;
+        badgeEl.style.display = 'inline-block';
+        // 已结束 → 聊天区顶部提示条 + 隐藏操作按钮
+        const isClosed = s.status === 'closed';
+        bannerEl.style.display = isClosed ? 'block' : 'none';
+        takeEl.style.display = 'none';
+        closeEl.style.display = isClosed ? 'none' : 'inline-block';
+        // 仅 待接入/心聆助手接待中 可"接入会话"; 接入后(已接入)隐藏该按钮
+        if (s.status === 'waiting_human' || s.status === 'bot') {
+            takeEl.style.display = 'inline-block';
+        }
+        // 回复输入区可用性: 仅 已接入(human) 可回复与 AI 润色; 其余一律禁用
+        const canChat = s.status === 'human';
+        setComposerEnabled(canChat);
+    }
+
+    // 输入区占位文案随会话状态变化
+    function composerPlaceholder(s) {
+        if (!s) return '请先选择会话';
+        if (s.status === 'human') return '输入回复内容…（Enter 发送，Shift+Enter 换行）';
+        if (s.status === 'closed') return '本会话已结束，无法继续回复';
+        return '接入会话后可回复来访者';
+    }
+
+    // 统一开关回复输入区: disabled 属性 + 置灰样式 (textare / 润色 / 发送)
+    function setComposerEnabled(enabled) {
+        const area = document.getElementById('replyArea');
+        const ta = document.getElementById('replyInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const polishBtn = document.getElementById('polishBtn');
+        ta.disabled = !enabled;
+        sendBtn.disabled = !enabled;
+        polishBtn.disabled = !enabled;
+        ta.placeholder = composerPlaceholder(currentSession);
+        area.classList.toggle('composer-off', !enabled);
+    }
+
+    // 兜底增量拉取: 断线重连后补齐推送间隙的消息 (增量, after_id=lastMessageId)
     async function pollMessages() {
         if (!currentSession) return;
         try {
             const messages = await api('/api/staff/sessions/' + currentSession.id + '/messages?after_id=' + lastMessageId);
-            const box = document.getElementById('staffMessages');
-            messages.forEach(m => {
-                if (m.role === 'bot') addChatMessage('bot', 'AI 机器人', m.content);
-                else if (m.role === 'user') addChatMessage('user', currentSession.visitor_name, m.content);
-                else addChatMessage('staff', '我 (客服)', m.content);
-                lastMessageId = m.id;
-            });
-            if (messages.length) box.scrollTop = box.scrollHeight;
-        } catch (e) { /* 静默重试 */ }
+            messages.forEach(addStaffChatMessage);
+        } catch (e) { /* 静默, 下次打开/重连时再补 */ }
     }
 
+    // WebSocket 推送 / 增量拉取共用: 一条消息上屏并推进消息游标 (仅游标, 不用于轮询)
+    function addStaffChatMessage(m) {
+        // 幂等去重: id 不晚于游标的旧消息已上屏, 跳过 (防止并发拉取/推送竞态造成重复气泡)
+        if (m.id > 0 && m.id <= lastMessageId) return;
+        if (m.role === 'bot') addChatMessage('bot', '心聆助手', m.content);
+        else if (m.role === 'user') addChatMessage('user', currentSession ? (currentSession.visitor_name || '来访者') : '来访者', m.content);
+        else addChatMessage('staff', '我（咨询师）', m.content);
+        if (m.id > lastMessageId) lastMessageId = m.id;
+        const box = document.getElementById('staffMessages');
+        box.scrollTop = box.scrollHeight;
+    }
+
+    // 渲染一条消息气泡: 动态内容一律 textContent, 不使用 innerHTML 拼接
     function addChatMessage(role, roleName, content) {
         const box = document.getElementById('staffMessages');
         const row = document.createElement('div');
-        row.className = 'msg-row ' + (role === 'staff' ? 'staff' : 'user');
+        row.className = 'msg-row ' + (role === 'staff' ? 'staff' : role === 'bot' ? 'bot' : 'user');
         const bubble = document.createElement('div');
         bubble.className = 'bubble';
         const tag = document.createElement('div');
         tag.className = 'role-tag';
-        tag.textContent = roleName;
+        tag.textContent = roleName;         // bot=心聆助手 / user=来访者昵称 / staff=我(咨询师)
         const text = document.createElement('div');
         text.textContent = content;
         bubble.appendChild(tag);
@@ -321,35 +738,145 @@
         box.appendChild(row);
     }
 
+    // ============ 工作台实时推送 (WebSocket, 替代轮询) ============
+    function connectStaffWs() {
+        if (!staffId) return;
+        staffWs = new WebSocket('/ws/staff?staff_id=' + staffId);
+        staffWs.onmessage = function (event) { handleStaffMsg(JSON.parse(event.data)); };
+        staffWs.onopen = function () {
+            setPushState('实时推送已连接', true);
+            loadSessions();                       // 重连后全量对账
+            if (currentSession) pollMessages();   // 补齐推送间隙的消息
+        };
+        staffWs.onclose = function () {
+            setPushState('推送断开, 3 秒后重连', false);
+            setTimeout(connectStaffWs, 3000);     // 断线自动重连
+        };
+    }
+
+    // 处理服务端推送消息
+    function handleStaffMsg(msg) {
+        switch (msg.type) {
+            case 'staff_session':   // 会话列表变更 (新转待接入/被接入/被关闭/有新活动)
+                applySessionPush(msg.session);
+                break;
+            case 'staff_message':   // 新消息 (来访者/心聆助手/咨询师): 选中该会话时实时上屏
+                if (currentSession && msg.message.session_id === currentSession.id) {
+                    addStaffChatMessage(msg.message);
+                }
+                break;
+            case 'pong':
+                break;
+            default:
+                break;
+        }
+    }
+
+    // 更新左侧面板的连接状态灯: 绿=已连接 / 橙=重连中
+    function setPushState(text, ok) {
+        const el = document.getElementById('pushState');
+        if (!el) return;
+        el.classList.toggle('on', !!ok);
+        el.classList.toggle('off', !ok);
+        const txt = el.querySelector('.state-text');
+        if (txt) txt.textContent = text;
+    }
+
+    // 心跳保活: 每 30 秒发送 {"type":"ping"}
+    function startStaffPing() {
+        if (window._staffPingTimer) return;
+        window._staffPingTimer = setInterval(function () {
+            if (staffWs && staffWs.readyState === WebSocket.OPEN) {
+                staffWs.send(JSON.stringify({ type: 'ping' }));
+            }
+        }, 30000);
+    }
+
     // ============ 操作 ============
+    // 接入会话 (takeover): 成功后本地即时反馈, 服务端推送会再次到达 (幂等)
     async function takeoverSession() {
         if (!currentSession) return alert('请先选择会话');
+        if (currentSession.status === 'human') return alert('该会话已由你接入');
         try {
             await api('/api/staff/sessions/' + currentSession.id + '/takeover', { method: 'POST' });
             currentSession.status = 'human';
-            refreshSessions();
+            updateChatHeader();                       // 徽章变绿色「已接入」, 接入按钮消失, 输入区可用
+            applySessionPush({ id: currentSession.id, status: 'human' });  // 即时移出"待接入"列表 (推送也会触发, 幂等)
         } catch (e) { alert(e.message); }
     }
 
-    async function sendReply() {
-        const content = document.getElementById('replyInput').value.trim();
-        if (!content || !currentSession) return;
-        try {
-            await api('/api/staff/sessions/' + currentSession.id + '/reply', {
-                method: 'POST',
-                body: JSON.stringify({ content }),
-            });
-            document.getElementById('replyInput').value = '';
-        } catch (e) { alert(e.message); }
-    }
-
+    // 结束会话 (close): 成功后徽章变灰色「已结束」+ 提示条 + 输入区禁用
     async function closeSession() {
         if (!currentSession) return alert('请先选择会话');
         try {
             await api('/api/staff/sessions/' + currentSession.id + '/close', { method: 'POST' });
             currentSession.status = 'closed';
-            refreshSessions();
+            updateChatHeader();                       // 徽章「已结束」+ 顶部提示条 + 禁用输入区
+            applySessionPush({ id: currentSession.id, status: 'closed' }); // 即时移出"接待中"列表
         } catch (e) { alert(e.message); }
+    }
+
+    // 发送回复 (reply): 自己的回复稍后由服务器 staff_message 推送回来上屏 (不本地重复追加)
+    async function sendReply() {
+        const input = document.getElementById('replyInput');
+        const content = input.value.trim();
+        if (!content) return;
+        if (!currentSession || currentSession.status !== 'human') return;
+        try {
+            await api('/api/staff/sessions/' + currentSession.id + '/reply', {
+                method: 'POST',
+                body: JSON.stringify({ content }),
+            });
+            input.value = '';
+            input.focus();
+        } catch (e) { alert(e.message); }
+    }
+
+    // ============ AI 检索润色 (仅接待中的会话可用) ============
+    // POST /api/staff/sessions/{id}/polish → data {draft, engine:'llm'|'rule', mode:'generate'|'polish', note, ...}
+    // 输入框已有草稿 -> 把草稿传给后端"润色"; 输入框为空 -> 根据来访者消息生成新草稿
+    async function polishDraft() {
+        if (!currentSession) return alert('请先选择会话');
+        if (currentSession.status !== 'human') return alert('仅接待中的会话可使用 AI 润色');
+        const input = document.getElementById('replyInput');
+        const draftText = input.value.trim();
+        const btn = document.getElementById('polishBtn');
+        btn.disabled = true;
+        btn.textContent = '润色中...';
+        try {
+            const payload = draftText ? { content: draftText } : {};
+            const data = await api('/api/staff/sessions/' + currentSession.id + '/polish', {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            });
+            // 成功: 把返回的润色稿填入输入框 (覆盖, 可再编辑) 并聚焦
+            if (data && data.draft) {
+                input.value = data.draft;
+                input.focus();
+            }
+            // 提示: engine=llm → AI 结果; 否则展示内置润色的 note 说明
+            const modeTip = data && data.mode === 'polish' ? '已润色您的草稿' : '已生成回答草稿';
+            const tip = data && data.engine === 'llm'
+                ? modeTip + '，发送前请自行审核'
+                : (data && data.note) || '内置检索润色结果, 可编辑';
+            showPolishHint(tip);
+        } catch (e) {
+            alert(e.message);
+        } finally {
+            btn.textContent = '✨ AI 润色';
+            btn.disabled = currentSession.status !== 'human';   // 按最新状态恢复可用性
+        }
+    }
+
+    // 润色提示小字: 显示后 2.6 秒淡出
+    function showPolishHint(text) {
+        const el = document.getElementById('polishHint');
+        if (window._polishHintTimer) clearTimeout(window._polishHintTimer);
+        el.textContent = text;
+        el.classList.add('show');
+        window._polishHintTimer = setTimeout(function () {
+            el.classList.remove('show');
+        }, 2600);
     }
 
     // ============ 统计报表 ============
@@ -361,39 +888,45 @@
             const items = [
                 ['会话总数', stats.session_total],
                 ['今日消息', stats.message_today],
-                ['机器人回答', stats.bot_answer_total],
+                ['心聆助手回答', stats.bot_answer_total],
                 ['知识库命中率', (stats.bot_hit_rate * 100).toFixed(1) + '%'],
                 ['评价次数', stats.rating_count],
                 ['平均满意度', stats.avg_rating === null ? '-' : stats.avg_rating],
             ];
-            items.forEach(([label, value]) => {
+            items.forEach(function (pair) {
                 const card = document.createElement('div');
                 card.className = 'stat-card';
                 const v = document.createElement('div');
                 v.className = 'value';
-                v.textContent = value;
+                v.textContent = pair[1];
                 const l = document.createElement('div');
                 l.className = 'label';
-                l.textContent = label;
+                l.textContent = pair[0];
                 card.appendChild(v);
                 card.appendChild(l);
                 grid.appendChild(card);
             });
-            // 状态分布
+            // 会话状态分布
             const dist = document.createElement('div');
             dist.className = 'card';
-            dist.innerHTML = '';
             const h = document.createElement('h3');
             h.textContent = '会话状态分布';
             const table = document.createElement('table');
-            table.innerHTML = '<thead><tr><th>状态</th><th>数量</th></tr></thead>';
+            const thead = document.createElement('thead');
+            thead.innerHTML = '<tr><th>状态</th><th>数量</th></tr>';   // 静态表头
             const tbody = document.createElement('tbody');
             const counts = stats.session_by_status || {};
-            Object.keys(counts).forEach(k => {
+            Object.keys(counts).forEach(function (k) {
                 const tr = document.createElement('tr');
-                tr.innerHTML = '<td>' + statusName(k) + '</td><td>' + counts[k] + '</td>';
+                const td1 = document.createElement('td');
+                td1.textContent = statusName(k);        // 动态内容 textContent
+                const td2 = document.createElement('td');
+                td2.textContent = counts[k];
+                tr.appendChild(td1);
+                tr.appendChild(td2);
                 tbody.appendChild(tr);
             });
+            table.appendChild(thead);
             table.appendChild(tbody);
             dist.appendChild(h);
             dist.appendChild(table);
@@ -402,28 +935,86 @@
     }
 
     // ============ 知识库管理 ============
+    let editingKnowledgeId = null;   // null = 新增模式; 数字 = 正在编辑的条目 id
+
+    function resetKnowledgeForm() {
+        editingKnowledgeId = null;
+        document.getElementById('kCategory').value = '';
+        document.getElementById('kQuestion').value = '';
+        document.getElementById('kKeywords').value = '';
+        document.getElementById('kAnswer').value = '';
+        document.getElementById('kEnabled').value = '1';
+        document.getElementById('kFormTitle').textContent = '新增知识条目';
+        document.getElementById('kFormHint').textContent = '';
+        document.getElementById('kEnabledRow').style.display = 'none';
+        document.getElementById('kSaveBtn').textContent = '新增';
+        document.getElementById('kCancelBtn').style.display = 'none';
+    }
+
+    // 编辑: 回填该条目现有全部信息 (分类/标准问题/关键词/答案/启用状态)
+    function editKnowledge(k) {
+        editingKnowledgeId = k.id;
+        document.getElementById('kCategory').value = k.category || '';
+        document.getElementById('kQuestion').value = k.question || '';
+        document.getElementById('kKeywords').value = k.keywords || '';
+        document.getElementById('kAnswer').value = k.answer || '';
+        document.getElementById('kEnabled').value = String(k.enabled == null ? 1 : k.enabled);
+        document.getElementById('kFormTitle').textContent = '编辑知识条目 #' + k.id;
+        document.getElementById('kFormHint').textContent = '正在修改: 「' + (k.question || '') + '」';
+        document.getElementById('kEnabledRow').style.display = 'flex';
+        document.getElementById('kSaveBtn').textContent = '保存修改';
+        document.getElementById('kCancelBtn').style.display = '';
+        document.getElementById('kQuestion').focus();
+    }
+
+    function cancelKnowledgeEdit() {
+        resetKnowledgeForm();
+    }
+
     async function loadKnowledge() {
         try {
             const rows = await api('/api/staff/knowledge');
             const tbody = document.getElementById('knowledgeBody');
             tbody.innerHTML = '';
-            rows.forEach(k => {
+            rows.forEach(function (k) {
                 const tr = document.createElement('tr');
-                tr.innerHTML = '';
-                const cells = [k.id, k.category, k.question, k.hit_count, k.enabled ? '是' : '否'];
-                cells.forEach(c => {
+
+                // 基本信息列 (含"关键词": 助手检索时按包含匹配的词)
+                const base = [
+                    k.id, k.category, k.question,
+                    { text: k.keywords, cls: 'kw-col', title: k.keywords },   // 超长省略, 悬停看全文
+                    k.hit_count,
+                    k.enabled ? '是' : '否',
+                ];
+                base.forEach(function (c) {
                     const td = document.createElement('td');
-                    td.textContent = c;
+                    if (typeof c === 'object') {
+                        td.textContent = c.text;
+                        td.className = c.cls || '';
+                        if (c.title) td.title = c.title;
+                    } else {
+                        td.textContent = c;
+                    }
                     tr.appendChild(td);
                 });
+
+                // 操作列: 编辑 + 删除
                 const opTd = document.createElement('td');
+                opTd.className = 'op-cell';
+                const edit = document.createElement('span');
+                edit.className = 'edit-btn';
+                edit.textContent = '编辑';
+                edit.onclick = function () { editKnowledge(k); };
+                opTd.appendChild(edit);
+
                 const del = document.createElement('span');
                 del.className = 'del-btn';
                 del.textContent = '删除';
-                del.onclick = async () => {
-                    if (!confirm('确认删除知识条目 #' + k.id + '? ')) return;
+                del.onclick = async function () {
+                    if (!confirm('确认删除知识条目 #' + k.id + '?\n「' + k.question + '」')) return;
                     try {
                         await api('/api/staff/knowledge/' + k.id, { method: 'DELETE' });
+                        if (editingKnowledgeId === k.id) resetKnowledgeForm();   // 删的是正在编辑的条目
                         loadKnowledge();
                     } catch (e) { alert(e.message); }
                 };
@@ -434,28 +1025,43 @@
         } catch (e) { alert(e.message); }
     }
 
-    async function addKnowledge() {
+    // 新增 (POST) 或 保存修改 (PUT, 含启用状态)
+    async function saveKnowledge() {
         const body = {
             category: document.getElementById('kCategory').value.trim(),
             question: document.getElementById('kQuestion').value.trim(),
             keywords: document.getElementById('kKeywords').value.trim(),
             answer: document.getElementById('kAnswer').value.trim(),
         };
-        if (!body.question || !body.keywords || !body.answer) return alert('请填写完整信息');
+        if (!body.question || !body.keywords || !body.answer) return alert('标准问题 / 关键词 / 标准答案 为必填项');
         try {
-            await api('/api/staff/knowledge', { method: 'POST', body: JSON.stringify(body) });
-            document.getElementById('kCategory').value = '';
-            document.getElementById('kQuestion').value = '';
-            document.getElementById('kKeywords').value = '';
-            document.getElementById('kAnswer').value = '';
+            if (editingKnowledgeId == null) {
+                await api('/api/staff/knowledge', { method: 'POST', body: JSON.stringify(body) });
+            } else {
+                body.enabled = parseInt(document.getElementById('kEnabled').value, 10);
+                await api('/api/staff/knowledge/' + editingKnowledgeId, {
+                    method: 'PUT', body: JSON.stringify(body),
+                });
+            }
+            resetKnowledgeForm();
             loadKnowledge();
         } catch (e) { alert(e.message); }
     }
 
     // ============ 启动 ============
-    if (staffId) {
-        enterWorkspace({ display_name: '客服', username: '#' + staffId });
-    }
+    (function init() {
+        // 发送快捷键: Enter 发送 / Shift+Enter 换行
+        document.getElementById('replyInput').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendReply();
+            }
+        });
+        // 已登录过 → 直接进入工作台 (display_name 不可知, 用 #id 占位展示)
+        if (staffId) {
+            enterWorkspace({ id: staffId, display_name: '咨询师', username: '#' + staffId });
+        }
+    })();
 </script>
 </body>
 </html>

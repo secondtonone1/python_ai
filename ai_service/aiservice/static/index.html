@@ -2,143 +2,585 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SmartService - AI 智能客服</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#5B7CFA">
+<title>心聆 MindEcho - 在线心理支持平台</title>
 <style>
+    /* ============================================================
+       心聆 MindEcho —— 在线心理支持平台（教学演示）
+       配色: 舒缓蓝紫 #5B7CFA + 青绿 #58C1A6, 浅灰蓝底 #F5F7FC
+       ============================================================ */
+    :root {
+        --primary:   #5B7CFA;   /* 主色: 蓝紫 */
+        --primary-2: #7A6FF0;   /* 渐变用紫 */
+        --accent:    #58C1A6;   /* 辅助: 青绿 */
+        --bg:        #F5F7FC;   /* 页面浅灰蓝 */
+        --ink:       #2C3554;   /* 正文 */
+        --muted:     #98A1B8;   /* 次要文字 */
+        --line:      #EDF0F9;   /* 分隔线 */
+        --card-radius: 22px;
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body { height: 100%; }
+
     body {
-        font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
-        background: #f0f2f5;
+        font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", system-ui, sans-serif;
+        color: var(--ink);
+        /* 柔和的双色光晕背景, 营造舒缓氛围 */
+        background:
+            radial-gradient(1000px 520px at 88% -12%, rgba(91, 124, 250, .10), transparent 62%),
+            radial-gradient(860px 480px at -8% 108%, rgba(88, 193, 166, .16), transparent 60%),
+            var(--bg);
+    }
+
+    .wrap {
         height: 100vh;
+        height: 100dvh;
+        max-width: 820px;
+        margin: 0 auto;
+        padding: 16px 16px 14px;
         display: flex;
         flex-direction: column;
-        align-items: center;
     }
-    .header {
-        width: 100%;
-        background: linear-gradient(135deg, #4f6ef7 0%, #7b5cf0 100%);
-        color: #fff;
-        padding: 14px 24px;
+
+    /* ---------- 主卡片: 上(头部) / 中(消息区+快捷问题) / 下(输入区) ---------- */
+    .card {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        border-radius: var(--card-radius);
+        box-shadow: 0 14px 44px rgba(80, 100, 200, .12);
+        overflow: hidden;
+    }
+    /* 卡片顶部一条品牌渐变细线 */
+    .card::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary) 0%, var(--primary-2) 55%, var(--accent) 100%);
+        z-index: 5;
+    }
+
+    /* ---------- 头部: 品牌 + 状态徽章 ---------- */
+    .card-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        box-shadow: 0 2px 8px rgba(0,0,0,.15);
+        gap: 12px;
+        padding: 16px 20px 14px;
+        background: linear-gradient(180deg, #FFFFFF 0%, #FAFBFF 100%);
+        border-bottom: 1px solid var(--line);
     }
-    .header h1 { font-size: 18px; font-weight: 600; }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .logo {
+        flex: none;
+        width: 46px; height: 46px;
+        border-radius: 15px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+        color: #fff;
+        font-size: 22px; font-weight: 700;
+        display: grid; place-items: center;
+        box-shadow: 0 6px 14px rgba(91, 124, 250, .35);
+    }
+    .brand-text { min-width: 0; }
+    .brand-text h1 {
+        font-size: 18px; font-weight: 700;
+        letter-spacing: .5px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .slogan { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .brand-note { font-size: 11px; color: #B4BDD2; margin-top: 2px; }
+    .brand-note .pipe { color: #D3DAEB; margin: 0 6px; }
+
+    /* 顶部状态徽章(带彩色状态圆点) */
     .status-badge {
-        background: rgba(255,255,255,.2);
-        border-radius: 12px;
-        padding: 4px 12px;
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
         font-size: 12px;
+        padding: 6px 13px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        transition: background .25s, color .25s;
+        max-width: 46%;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .chat-box {
-        width: 720px;
-        max-width: 96vw;
-        flex: 1;
-        margin: 16px 0;
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 2px 12px rgba(0,0,0,.08);
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
+    .status-badge .dot {
+        flex: none;
+        width: 7px; height: 7px;
+        border-radius: 50%;
+        background: #B9C2D9;
     }
+    /* 状态配色: 连接中 / 助手接待(青绿) / 转接中(琥珀) / 咨询师在线(蓝紫) / 已结束(灰) / 异常重连(红) */
+    .tone-connecting .dot { background: #AAB4CE; animation: pulse 1.2s infinite; }
+    .tone-ok         { background: rgba(88, 193, 166, .12); color: #33866F; }
+    .tone-ok .dot    { background: var(--accent); }
+    .tone-warn       { background: rgba(240, 166, 74, .14); color: #C08420; }
+    .tone-warn .dot  { background: #F0A64A; animation: pulse 1.2s infinite; }
+    .tone-live       { background: rgba(91, 124, 250, .12); color: #4463E0; }
+    .tone-live .dot  { background: var(--primary); }
+    .tone-off        { background: #F2F4F9; color: #8A93A6; }
+    .tone-off .dot   { background: #B4BCCE; }
+    .tone-red        { background: rgba(242, 112, 122, .12); color: #D14F5E; }
+    .tone-red .dot   { background: #F2707A; animation: pulse .9s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+
+    /* ---------- 中部: 消息滚动区 ---------- */
     .messages {
         flex: 1;
+        min-height: 0;
         overflow-y: auto;
-        padding: 20px;
+        padding: 20px 22px 14px;
+        background: linear-gradient(180deg, #F9FAFE 0%, #FCFDFF 100%);
+        scroll-behavior: smooth;
     }
-    .msg-row { display: flex; margin-bottom: 14px; }
-    .msg-row.user { justify-content: flex-end; }
+    .messages::-webkit-scrollbar { width: 6px; }
+    .messages::-webkit-scrollbar-thumb { background: #D9E0F2; border-radius: 3px; }
+    .messages::-webkit-scrollbar-track { background: transparent; }
+
+    /* 单条消息: 头像(仅助手/咨询师) + 右侧内容列 */
+    .msg {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 16px;
+        animation: msgIn .28s ease both;
+    }
+    @keyframes msgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+    .avatar {
+        flex: none;
+        width: 38px; height: 38px;
+        margin-right: 10px;
+        border-radius: 50%;
+        display: grid; place-items: center;
+        font-size: 15px;
+    }
+    .avatar.bot { background: linear-gradient(135deg, var(--primary), var(--primary-2)); color: #fff; font-weight: 700; }
+    .avatar.staff { background: #EEF3FF; font-size: 16px; }
+
+    .msg-body {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        max-width: min(76%, 600px);
+        min-width: 0;
+    }
+
+    /* 用户消息靠右, 无头像 */
+    .msg.user { justify-content: flex-end; }
+    .msg.user .msg-body { align-items: flex-end; }
+
+    /* ---------- 气泡 ---------- */
     .bubble {
-        max-width: 72%;
         padding: 10px 14px;
-        border-radius: 10px;
-        font-size: 14px;
-        line-height: 1.7;
+        border-radius: 18px;
+        font-size: 14.5px;
+        line-height: 1.75;
         white-space: pre-wrap;
         word-break: break-word;
+        overflow-wrap: anywhere;
+        position: relative;
     }
-    .msg-row.user .bubble { background: #4f6ef7; color: #fff; border-top-right-radius: 2px; }
-    .msg-row.bot .bubble, .msg-row.staff .bubble { background: #f1f3f7; color: #333; border-top-left-radius: 2px; }
-    .msg-row .role-tag { font-size: 12px; color: #999; margin-bottom: 4px; }
-    .msg-row.user .role-tag { text-align: right; }
-    .rating-bar { margin-top: 8px; font-size: 12px; color: #999; }
-    .rating-bar button {
-        border: 1px solid #ddd; background: #fff; border-radius: 10px;
-        padding: 2px 10px; cursor: pointer; font-size: 12px; margin-right: 6px;
+    .msg.bot .bubble, .msg.staff .bubble {
+        background: #fff;
+        border: 1px solid var(--line);
+        color: var(--ink);
+        box-shadow: 0 2px 8px rgba(80, 95, 180, .06);
+        border-top-left-radius: 6px;
     }
-    .rating-bar button:hover { border-color: #4f6ef7; color: #4f6ef7; }
-    .rating-bar button.done { opacity: .5; cursor: default; }
+    .msg.user .bubble {
+        background: linear-gradient(135deg, #6D8BFA 0%, #8B7CFA 100%);
+        color: #fff;
+        border: none;
+        box-shadow: 0 6px 16px rgba(109, 120, 250, .28);
+        border-top-right-radius: 6px;
+    }
+
+    /* 流式输出右侧的闪烁光标 */
+    .stream-cursor {
+        display: inline-block;
+        width: 2px;
+        height: 1em;
+        margin-left: 3px;
+        vertical-align: -2px;
+        border-radius: 1px;
+        background: var(--primary);
+        animation: blink .9s steps(1) infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* 机器人"正在输入"三连点 */
+    .typing-dots { display: inline-flex; gap: 4px; align-items: center; padding: 3px 2px; }
+    .typing-dots i {
+        width: 6px; height: 6px; border-radius: 50%;
+        background: #A9B4D9;
+        animation: tp 1.2s ease-in-out infinite;
+    }
+    .typing-dots i:nth-child(2) { animation-delay: .18s; }
+    .typing-dots i:nth-child(3) { animation-delay: .36s; }
+    @keyframes tp {
+        0%, 60%, 100% { opacity: .35; transform: translateY(0); }
+        30% { opacity: 1; transform: translateY(-3px); }
+    }
+
+    /* 气泡下方的角色标签 + 时间 */
+    .meta {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 6px;
+        font-size: 11px;
+        color: var(--muted);
+    }
+    .msg.user .meta { justify-content: flex-end; }
+    .msg.user .role-tag { color: #5B7CFA; }
+    .meta .dot-sep { color: #D3DAEB; }
+
+    /* 满意 / 不满意 评价条(仅机器人消息) */
+    .rating-bar {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--muted);
+    }
+    .rate-btn {
+        border: 1px solid #DDE3F5;
+        background: #fff;
+        color: #5B6478;
+        border-radius: 999px;
+        padding: 3px 12px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all .18s;
+    }
+    .rate-btn:hover { transform: translateY(-1px); }
+    .rate-btn.like:hover { border-color: var(--accent); color: #2E9C82; background: rgba(88, 193, 166, .08); }
+    .rate-btn.dislike:hover { border-color: #F09BB0; color: #D14F5E; background: rgba(242, 112, 122, .07); }
+    .rate-btn.done, .rate-btn:disabled {
+        background: #EFF2FA;
+        border-color: transparent;
+        color: #AFB7CB;
+        cursor: default;
+        transform: none;
+        opacity: .75;
+    }
+
+    /* 居中系统提示条 */
     .notice {
-        text-align: center; color: #999; font-size: 12px; margin: 6px 0;
+        align-self: center;
+        text-align: center;
+        color: #8A93A6;
+        font-size: 12px;
+        margin: 10px auto;
+        padding: 5px 14px;
+        border-radius: 999px;
+        background: #F2F4FA;
+        max-width: 86%;
+        line-height: 1.6;
     }
-    .notice.warn { color: #e6a23c; }
-    .input-area {
-        display: flex; border-top: 1px solid #eee; padding: 12px;
+    .notice.warn { background: #FDF3E3; color: #B8860B; }
+    .notice.info { background: rgba(91, 124, 250, .08); color: #4463E0; }
+
+    /* ---------- 快捷问题胶囊(欢迎环节, 输入框上方) ---------- */
+    .chips-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px 6px;
+        background: #FBFCFE;
+        border-top: 1px solid var(--line);
+        transition: opacity .25s, max-height .25s;
+        overflow: hidden;
     }
-    .input-area input {
-        flex: 1; border: 1px solid #ddd; border-radius: 20px;
-        padding: 10px 16px; font-size: 14px; outline: none;
+    .chips-bar.hidden { display: none; }
+    .chips-label {
+        flex: none;
+        font-size: 12px;
+        color: var(--muted);
+        margin-right: 2px;
     }
-    .input-area input:focus { border-color: #4f6ef7; }
-    .input-area button {
-        margin-left: 10px; border: none; border-radius: 20px;
-        background: #4f6ef7; color: #fff; padding: 10px 22px;
-        font-size: 14px; cursor: pointer;
+    .chip {
+        border: 1px solid #DDE4FB;
+        background: #fff;
+        color: #4463E0;
+        border-radius: 999px;
+        padding: 6px 13px;
+        font-size: 13px;
+        line-height: 1.5;
+        cursor: pointer;
+        transition: all .18s;
     }
-    .input-area button:hover { background: #3d5ce0; }
+    .chip:hover {
+        background: #EDF1FF;
+        border-color: #9FB0F5;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(91, 124, 250, .16);
+    }
+    .chip:active { transform: none; }
+
+    /* ---------- 下部: 输入区 + 免责声明 ---------- */
+    .composer {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 18px 10px;
+        background: #fff;
+        border-top: 1px solid var(--line);
+    }
+    .composer input {
+        flex: 1;
+        min-width: 0;
+        border: 1px solid #E3E8F5;
+        background: #F6F8FE;
+        border-radius: 999px;
+        padding: 11px 18px;
+        font-size: 14px;
+        color: var(--ink);
+        outline: none;
+        transition: border-color .2s, box-shadow .2s, background .2s;
+    }
+    .composer input::placeholder { color: #B4BDD2; }
+    .composer input:focus {
+        border-color: var(--primary);
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(91, 124, 250, .16);
+    }
+    .composer input:disabled { background: #F4F5FA; color: #A7AEBF; }
+    .send-btn {
+        flex: none;
+        border: none;
+        border-radius: 999px;
+        padding: 11px 24px;
+        font-size: 14px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+        box-shadow: 0 6px 14px rgba(91, 124, 250, .32);
+        cursor: pointer;
+        transition: all .18s;
+        letter-spacing: 2px;
+    }
+    .send-btn:hover { transform: translateY(-1px); filter: brightness(1.06); }
+    .send-btn:active { transform: none; }
+    .send-btn:disabled {
+        background: #C9CFE2;
+        box-shadow: none;
+        cursor: not-allowed;
+        transform: none;
+        filter: none;
+    }
+
+    .disclaimer {
+        padding: 8px 20px 11px;
+        background: #FBFCFE;
+        border-top: 1px solid var(--line);
+        font-size: 11px;
+        color: #A6AFC4;
+        text-align: center;
+        line-height: 1.8;
+    }
+    .disclaimer .hotline { color: #C08420; }
+
+    /* ---------- 移动端适配 ---------- */
+    @media (max-width: 620px) {
+        .wrap { padding: 8px 8px 6px; }
+        .card { border-radius: 18px; }
+        .card-header { padding: 13px 14px 11px; }
+        .logo { width: 40px; height: 40px; font-size: 19px; border-radius: 13px; }
+        .brand-text h1 { font-size: 16px; }
+        .brand-note { display: none; }
+        .status-badge { max-width: 52%; padding: 5px 10px; font-size: 11px; }
+        .messages { padding: 14px 12px 10px; }
+        .msg-body { max-width: 84%; }
+        .avatar { width: 32px; height: 32px; margin-right: 8px; font-size: 13px; }
+        .msg.user .avatar { margin-left: 8px; }
+        .chips-bar { padding: 8px 12px 4px; gap: 6px; }
+        .chip { padding: 5px 10px; font-size: 12px; }
+        .chips-label { display: none; }
+        .composer { padding: 10px 12px 8px; gap: 8px; }
+        .composer input { padding: 10px 14px; }
+        .send-btn { padding: 10px 18px; }
+        .disclaimer { padding: 7px 12px 9px; }
+    }
 </style>
 </head>
 <body>
-<div class="header">
-    <h1>SmartService AI 智能客服</h1>
-    <span class="status-badge" id="statusBadge">连接中...</span>
-</div>
-<div class="chat-box">
-    <div class="messages" id="messages"></div>
-    <div class="input-area">
-        <input id="input" placeholder="请输入您的问题, 回车发送" autocomplete="off">
-        <button onclick="send()">发送</button>
-    </div>
+<div class="wrap">
+    <section class="card">
+
+        <!-- ================= 头部: 品牌 + 状态徽章 ================= -->
+        <header class="card-header">
+            <div class="brand">
+                <div class="logo" aria-hidden="true">心</div>
+                <div class="brand-text">
+                    <h1>心聆 MindEcho</h1>
+                    <p class="slogan">让每一种情绪，都有回声</p>
+                    <p class="brand-note">在线心理支持平台<span class="pipe">·</span>教学演示</p>
+                </div>
+            </div>
+            <div class="status-badge tone-connecting" id="statusBadge">
+                <span class="dot"></span>
+                <span class="badge-text" id="badgeText">连接中…</span>
+            </div>
+        </header>
+
+        <!-- ================= 中部: 消息区 ================= -->
+        <main class="messages" id="messages" role="log" aria-live="polite"></main>
+
+        <!-- 欢迎环节的快捷问题胶囊(输入框上方, WS 打开后展示) -->
+        <div class="chips-bar hidden" id="chipsBar"></div>
+
+        <!-- ================= 下部: 输入区 ================= -->
+        <footer class="composer">
+            <input id="input" placeholder="和心聆说说你的感受…" autocomplete="off" maxlength="2000">
+            <button type="button" class="send-btn" id="sendBtn">发送</button>
+        </footer>
+
+        <!-- 页面底部免责声明 -->
+        <div class="disclaimer">
+            心聆 MindEcho 为教学演示项目，不构成医疗或心理诊断。<br>
+            如有伤害自己或他人的风险，请立即拨打 120/110 或 <span class="hotline">全国心理援助热线 12356</span>。
+        </div>
+
+    </section>
 </div>
 
 <script>
+    /* =====================================================================
+       心聆 MindEcho 访客聊天页
+       脚本骨架(与旧版对应, 便于教学):
+         init() 创建会话 -> connectWs() 连 WebSocket -> handleServerMsg()
+         -> 各渲染函数(addMessage / appendChunk / finalizeBubble ...)
+
+       —— 通信协议(与后端严格一致) ——
+       REST:
+         POST /api/session                       body {"visitor_name":"来访者"}
+         POST /api/message/{id}/rate             body {"rating": 1|-1}
+       WebSocket  ws://location.host/ws/chat/{sessionId}
+         客户端 -> 服务端: {"type":"chat","content":..} | 心跳 {"type":"ping"} 每30s
+         服务端 -> 客户端:
+           {"type":"chunk","delta":..}                          流式分片
+           {"type":"message_end","message":{id,...}}            一条消息结束
+           {"type":"session_status","status":"bot|waiting_human|human|closed"}
+           {"type":"staff_reply","message":{...}}               咨询师实时回复
+           {"type":"error","code":..,"message":..}
+       安全: 所有动态内容一律 textContent + createElement, 禁止 innerHTML 拼动态数据
+       ===================================================================== */
+
     // ============ 全局状态 ============
-    let sessionId = null;
-    let ws = null;
-    let currentBubble = null;      // 正在流式输出的气泡(文本节点)
-    let pingTimer = null;
+    let sessionId = null;          // 本次会话 id
+    let ws = null;                 // WebSocket 实例
+    let pingTimer = null;          // 30s 心跳定时器
+    let reconnectTimer = null;     // 断线重连定时器
+    let manualClose = false;       // 是否页面主动关闭(避免误重连)
+    let currentBubble = null;      // 当前正在流式生成的气泡 {row, bubble, textEl, cursorEl, body}
+    let typingRow = null;          // "正在输入…"占位气泡
+    let sessionStatus = null;      // 服务端最近一次会话状态
+    let welcomeShown = false;      // 欢迎气泡是否已展示(重连后不重复展示)
 
+    // ============ 常量 ============
+    const ROLE_INFO = {
+        user:  { name: '我',          avatar: null },
+        bot:   { name: '心聆助手',    avatar: '心' },
+        staff: { name: '咨询师',      avatar: '👤' },
+    };
+    // 服务端 session_status -> 徽章文案(需求给定的文案)
+    const STATUS_TEXT = {
+        bot:           '心理助手接待中',
+        waiting_human: '已转接在线咨询师，请稍候',
+        human:         '咨询师已接入',
+        closed:        '会话已结束',
+    };
+    // 状态 -> 徽章配色 tone(见 CSS)
+    const STATUS_TONE = {
+        bot: 'ok', waiting_human: 'warn', human: 'live', closed: 'off',
+    };
+
+    // 快捷问题(需求给定, 点击即作为 chat 消息发送)
+    const QUICK_QUESTIONS = [
+        '最近总是很焦虑，怎么办',
+        '晚上总是失眠睡不着',
+        '工作压力大到喘不过气',
+        '怎么预约心理咨询',
+        '咨询内容保密吗',
+    ];
+
+    // ============ DOM 引用 ============
     const messagesBox = document.getElementById('messages');
-    const statusBadge = document.getElementById('statusBadge');
-    const input = document.getElementById('input');
+    const statusBadge  = document.getElementById('statusBadge');
+    const badgeText    = document.getElementById('badgeText');
+    const input        = document.getElementById('input');
+    const sendBtn      = document.getElementById('sendBtn');
+    const chipsBar     = document.getElementById('chipsBar');
 
-    // ============ 初始化: 创建会话 -> 连接 WebSocket ============
+    // ============ 初始化: 每次加载都新建会话(无历史回填) ============
     async function init() {
         try {
+            // REST: 创建访客会话
             const resp = await fetch('/api/session', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ visitor_name: '访客' }),
+                body: JSON.stringify({ visitor_name: '来访者' }),
             });
             const data = await resp.json();
-            if (data.code !== 200) throw new Error(data.message);
-            sessionId = data.data.id;
+            if (!resp.ok || data.code !== 200) {
+                throw new Error((data && data.message) || ('HTTP ' + resp.status));
+            }
+            sessionId = data.data.id;      // 拿会话 id, 用于拼 WS 地址
             connectWs();
         } catch (e) {
-            setStatus('初始化失败: ' + e.message, true);
+            setBadge('初始化失败，请刷新页面', 'red');
+            addNotice('无法创建会话：' + e.message, true);
         }
     }
 
+    // ============ 连接 WebSocket(含心跳与断线自动重连) ============
     function connectWs() {
-        ws = new WebSocket('ws://' + location.host + '/ws/chat/' + sessionId);
-        ws.onmessage = (event) => handleServerMsg(JSON.parse(event.data));
-        ws.onclose = () => {
-            setStatus('连接已断开, 正在重连...', true);
-            setTimeout(connectWs, 3000);   // 断线自动重连
+        if (!sessionId) return;
+        if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+
+        setBadge('连接中…', 'connecting');
+
+        // 协议地址: ws://host/ws/chat/{sessionId}
+        try {
+            ws = new WebSocket('ws://' + location.host + '/ws/chat/' + sessionId);
+        } catch (e) {
+            scheduleReconnect();
+            return;
+        }
+
+        ws.onopen = () => {
+            // 恢复/刷新顶部状态徽章; 首次连接时展示欢迎气泡与快捷问题
+            refreshBadge();
+            showWelcome();
+            removeTyping();
+            input.focus();
         };
-        // 心跳保活: 每 30 秒发一次 ping (对应 TCP 长连接的心跳概念)
+
+        ws.onmessage = (event) => {
+            let msg;
+            try { msg = JSON.parse(event.data); } catch (e) { return; }
+            handleServerMsg(msg);
+        };
+
+        ws.onclose = () => {
+            if (manualClose) return;                 // 页面主动关闭, 不再重连
+            setBadge('连接已断开，正在重连…', 'red');
+            scheduleReconnect();                     // 断线 3 秒后自动重连
+        };
+
+        // 心跳保活: 每 30 秒发一次 {"type":"ping"} (先清旧定时器避免重复)
+        if (pingTimer) clearInterval(pingTimer);
         pingTimer = setInterval(() => {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({ type: 'ping' }));
@@ -146,113 +588,221 @@
         }, 30000);
     }
 
+    function scheduleReconnect() {
+        if (reconnectTimer) clearTimeout(reconnectTimer);
+        reconnectTimer = setTimeout(connectWs, 3000);   // 3 秒后重连
+    }
+
     // ============ 服务端消息处理 ============
     function handleServerMsg(msg) {
         switch (msg.type) {
-            case 'chunk':           // 流式分片: 追加到当前气泡
+            case 'chunk':            // 机器人流式分片: 逐字追加到"当前气泡"
                 appendChunk(msg.delta);
                 break;
-            case 'message_end':     // 一条机器人消息输出完毕
+            case 'message_end':      // 一条消息生成完毕
                 finalizeBubble(msg.message);
                 break;
-            case 'session_status':  // 会话状态变化
+            case 'session_status':   // 会话状态变化(更新顶部徽章)
                 updateSessionStatus(msg.status);
                 break;
-            case 'staff_reply':     // 人工客服回复(实时推送)
-                addMessage('staff', '人工客服', msg.message.content, null);
+            case 'staff_reply':      // 咨询师回复实时到达
+                removeTyping();
+                addMessage('staff', msg.message.content, null);
                 break;
-            case 'error':
-                addNotice(msg.message, true);
+            case 'error':            // 服务端错误 -> 页面内提示
+                addNotice('服务端提示：' + (msg.message || ('错误码 ' + msg.code)), true);
                 break;
             default:
                 break;
         }
     }
 
-    // ============ 界面渲染 (全部用 textContent, 防止 XSS 注入) ============
-    function addMessage(role, roleName, content, messageId) {
-        const row = document.createElement('div');
-        row.className = 'msg-row ' + role;
-        const bubble = document.createElement('div');
-        bubble.className = 'bubble';
-        const tag = document.createElement('div');
-        tag.className = 'role-tag';
-        tag.textContent = roleName;
-        const text = document.createElement('div');
-        text.textContent = content;          // 安全实践: 不用 innerHTML
-        bubble.appendChild(tag);
-        bubble.appendChild(text);
-        if (role === 'bot' && messageId) {
-            bubble.appendChild(buildRatingBar(messageId));
-        }
-        row.appendChild(bubble);
-        messagesBox.appendChild(row);
+    // ============ 欢迎环节(纯前端, 不调接口) ============
+    function showWelcome() {
+        if (welcomeShown || sessionStatus === 'closed') return;
+        welcomeShown = true;
+
+        // 心聆助手欢迎气泡
+        const m = buildMsg('bot');
+        m.textEl.textContent = '你好，我是心聆的 AI 心理支持助手。无论你是焦虑、失眠、压力大，还是只是想说说话，都可以从这里开始。也可以点下面的问题直接问我。';
+        messagesBox.appendChild(m.row);
+
+        showChips();
         scrollToBottom();
     }
 
+    // 快捷问题胶囊(由 JS 生成, 避免 HTML/JS 文本不一致)
+    function showChips() {
+        if (chipsBar.children.length === 0) {
+            const label = document.createElement('span');
+            label.className = 'chips-label';
+            label.textContent = '可以这样问我：';
+            chipsBar.appendChild(label);
+
+            QUICK_QUESTIONS.forEach((q) => {
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'chip';
+                chip.textContent = q;                  // 安全: textContent
+                chip.onclick = () => send(q);          // 点击即作为 chat 消息发送
+                chipsBar.appendChild(chip);
+            });
+        }
+        chipsBar.classList.remove('hidden');
+    }
+    function hideChips() {
+        chipsBar.classList.add('hidden');
+    }
+
+    // ============ 界面渲染(全部 textContent + createElement, 防 XSS) ============
+
+    // 构建一条消息的基本骨架, 返回 {row, bubble, body, textEl, meta}
+    function buildMsg(role) {
+        const info = ROLE_INFO[role];
+        const row = document.createElement('div');
+        row.className = 'msg ' + role;
+
+        if (info.avatar) {           // 助手/咨询师带圆形头像
+            const av = document.createElement('div');
+            av.className = 'avatar ' + (role === 'staff' ? 'staff' : 'bot');
+            av.textContent = info.avatar;
+            row.appendChild(av);
+        }
+
+        const body = document.createElement('div');
+        body.className = 'msg-body';
+
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        const textEl = document.createElement('div');
+        textEl.className = 'msg-text';
+        bubble.appendChild(textEl);
+        body.appendChild(bubble);
+
+        // 气泡下方: 角色小标签 + 时间
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        const tag = document.createElement('span');
+        tag.className = 'role-tag';
+        tag.textContent = info.name;
+        const sep = document.createElement('span');
+        sep.className = 'dot-sep';
+        sep.textContent = '·';
+        const time = document.createElement('span');
+        time.className = 'time';
+        time.textContent = formatTime(new Date());
+        meta.appendChild(tag); meta.appendChild(sep); meta.appendChild(time);
+        body.appendChild(meta);
+
+        row.appendChild(body);
+        return { row, bubble, body, textEl };
+    }
+
+    // 整条消息上屏(用户 / 助手 / 咨询师)
+    function addMessage(role, content, messageId) {
+        const m = buildMsg(role);
+        m.textEl.textContent = content;          // 安全实践: 不用 innerHTML
+        if (role === 'bot' && messageId) {
+            m.body.appendChild(buildRatingBar(messageId));
+        }
+        messagesBox.appendChild(m.row);
+        scrollToBottom();
+    }
+
+    // 流式输出: 把分片逐字追加到"当前正在生成的气泡"
+    function appendChunk(delta) {
+        removeTyping();
+        if (!currentBubble) {
+            const m = buildMsg('bot');
+            // 气泡右侧追加一个闪烁光标, 提示正在生成
+            const cursor = document.createElement('span');
+            cursor.className = 'stream-cursor';
+            m.bubble.appendChild(cursor);
+            messagesBox.appendChild(m.row);
+            currentBubble = { row: m.row, bubble: m.bubble, body: m.body, textEl: m.textEl, cursorEl: cursor };
+        }
+        currentBubble.textEl.textContent += delta;   // 打字机逐字效果
+        scrollToBottom();
+    }
+
+    // 一条消息输出完毕: 收尾光标, 并挂上满意/不满意评价按钮
+    function finalizeBubble(message) {
+        removeTyping();
+        if (currentBubble) {
+            if (message && message.content && !currentBubble.textEl.textContent) {
+                currentBubble.textEl.textContent = message.content;
+            }
+            if (currentBubble.cursorEl) currentBubble.cursorEl.remove();  // 停掉光标
+            if (message && message.id) {
+                currentBubble.body.appendChild(buildRatingBar(message.id));
+            }
+            currentBubble = null;
+        } else if (message) {
+            addMessage('bot', message.content || '', message.id);
+        }
+        scrollToBottom();
+    }
+
+    // 满意/不满意评价条(调用 REST rate 接口, 成功后置灰)
     function buildRatingBar(messageId) {
         const bar = document.createElement('div');
         bar.className = 'rating-bar';
+
         const label = document.createElement('span');
-        label.textContent = '回答是否有帮助? ';
-        const yesBtn = document.createElement('button');
-        yesBtn.textContent = '满意';
-        const noBtn = document.createElement('button');
-        noBtn.textContent = '不满意';
-        const doRate = async (rating, btn) => {
-            const resp = await fetch('/api/message/' + messageId + '/rate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ rating: rating }),
+        label.textContent = '这条回答有帮助吗？';
+
+        const likeBtn = document.createElement('button');
+        likeBtn.type = 'button';
+        likeBtn.className = 'rate-btn like';
+        likeBtn.textContent = '👍 满意';
+
+        const dislikeBtn = document.createElement('button');
+        dislikeBtn.type = 'button';
+        dislikeBtn.className = 'rate-btn dislike';
+        dislikeBtn.textContent = '👎 不满意';
+
+        const markDone = () => {
+            bar.querySelectorAll('button').forEach((b) => {
+                b.classList.add('done');
+                b.disabled = true;
             });
-            const data = await resp.json();
-            if (data.code === 200) {
-                bar.querySelectorAll('button').forEach(b => b.classList.add('done'));
-                label.textContent = '感谢您的反馈! ';
+        };
+
+        // REST: POST /api/message/{message_id}/rate  body {"rating": 1|-1}
+        const doRate = async (rating) => {
+            if (bar.dataset.sending) return;             // 防止重复提交
+            bar.dataset.sending = '1';
+            bar.querySelectorAll('button').forEach((b) => { b.disabled = true; });
+            try {
+                const resp = await fetch('/api/message/' + messageId + '/rate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rating: rating }),
+                });
+                const data = await resp.json();
+                if (data.code === 200) {
+                    label.textContent = '💚 感谢您的反馈！';
+                    markDone();
+                } else {
+                    throw new Error(data.message || 'rate failed');
+                }
+            } catch (e) {
+                label.textContent = '提交失败，请重试';
+                delete bar.dataset.sending;
+                bar.querySelectorAll('button').forEach((b) => { b.disabled = false; });
             }
         };
-        yesBtn.onclick = () => doRate(1, yesBtn);
-        noBtn.onclick = () => doRate(-1, noBtn);
+
+        likeBtn.onclick = () => doRate(1);
+        dislikeBtn.onclick = () => doRate(-1);
+
         bar.appendChild(label);
-        bar.appendChild(yesBtn);
-        bar.appendChild(noBtn);
+        bar.appendChild(likeBtn);
+        bar.appendChild(dislikeBtn);
         return bar;
     }
 
-    function appendChunk(delta) {
-        // 流式输出: 分片逐字追加到同一个气泡
-        if (!currentBubble) {
-            const row = document.createElement('div');
-            row.className = 'msg-row bot';
-            const bubble = document.createElement('div');
-            bubble.className = 'bubble';
-            const tag = document.createElement('div');
-            tag.className = 'role-tag';
-            tag.textContent = 'AI 机器人';
-            const text = document.createElement('div');
-            text.textContent = '';
-            bubble.appendChild(tag);
-            bubble.appendChild(text);
-            row.appendChild(bubble);
-            messagesBox.appendChild(row);
-            currentBubble = { row: row, text: text };
-        }
-        currentBubble.text.textContent += delta;   // 逐字效果
-        scrollToBottom();
-    }
-
-    function finalizeBubble(message) {
-        if (currentBubble) {
-            const row = currentBubble.row;
-            const bubble = row.querySelector('.bubble');
-            bubble.appendChild(buildRatingBar(message.id));
-            currentBubble = null;
-        } else {
-            addMessage('bot', 'AI 机器人', message.content, message.id);
-        }
-        scrollToBottom();
-    }
-
+    // 居中系统提示条(页面内提示)
     function addNotice(content, warn) {
         const div = document.createElement('div');
         div.className = 'notice' + (warn ? ' warn' : '');
@@ -261,19 +811,51 @@
         scrollToBottom();
     }
 
+    // 会话状态变化 -> 顶部徽章文案 + 结束态处理
     function updateSessionStatus(status) {
-        const map = {
-            bot: '机器人接待中',
-            waiting_human: '已转人工, 请稍候...',
-            human: '人工客服已接入',
-            closed: '会话已结束',
-        };
-        setStatus(map[status] || status, status === 'waiting_human');
+        sessionStatus = status;
+        refreshBadge();
+        if (status === 'closed') {
+            // 会话结束: 禁用输入与发送
+            input.disabled = true;
+            sendBtn.disabled = true;
+            input.placeholder = '会话已结束，感谢你的倾诉';
+            hideChips();
+            removeTyping();
+            addNotice('本次会话已结束，感谢你的信任。照顾好自己 ❤', false);
+        }
     }
 
-    function setStatus(text, warn) {
-        statusBadge.textContent = text;
-        statusBadge.style.background = warn ? 'rgba(255,180,60,.35)' : 'rgba(255,255,255,.2)';
+    // 根据最近一次会话状态刷新徽章(无状态时按 bot 处理)
+    function refreshBadge() {
+        const status = sessionStatus || 'bot';
+        setBadge(STATUS_TEXT[status] || status, STATUS_TONE[status] || 'connecting');
+    }
+
+    // 顶部徽章: 文案 + 配色 tone(connecting/ok/warn/live/off/red)
+    function setBadge(text, tone) {
+        badgeText.textContent = text;
+        statusBadge.className = 'status-badge tone-' + (tone || 'connecting');
+    }
+
+    // "正在输入…"占位气泡(发送后、收到首个分片前展示)
+    function showTyping() {
+        removeTyping();
+        const m = buildMsg('bot');
+        m.bubble.classList.add('typing-bubble');
+        const dots = document.createElement('span');
+        dots.className = 'typing-dots';
+        for (let i = 0; i < 3; i++) dots.appendChild(document.createElement('i'));
+        m.bubble.appendChild(dots);
+        messagesBox.appendChild(m.row);
+        typingRow = m.row;
+        scrollToBottom();
+    }
+    function removeTyping() {
+        if (typingRow) {
+            typingRow.remove();
+            typingRow = null;
+        }
     }
 
     function scrollToBottom() {
@@ -281,22 +863,50 @@
     }
 
     // ============ 发送消息 ============
-    function send() {
-        const text = input.value.trim();
-        if (!text) return;
-        if (!ws || ws.readyState !== WebSocket.OPEN) {
-            addNotice('连接尚未就绪, 请稍候...', true);
+    function send(text) {
+        const content = (text !== undefined ? text : input.value).trim();
+        if (!content) return;                        // 空内容忽略
+        if (sessionStatus === 'closed') {
+            addNotice('会话已结束，无法发送消息', true);
             return;
         }
-        ws.send(JSON.stringify({ type: 'chat', content: text }));
-        addMessage('user', '我', text, null);
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+            addNotice('正在连接心聆助手，请稍候…', true);
+            return;
+        }
+        // WS: 客户端 -> 服务端 {"type":"chat","content":...}
+        ws.send(JSON.stringify({ type: 'chat', content: content }));
+        addMessage('user', content, null);           // 自己的消息立即上屏(右对齐渐变气泡)
         input.value = '';
+        hideChips();                                 // 发送过消息后收起快捷问题
+        showTyping();                                // 等待回复时显示"正在输入…"
+        input.focus();
     }
 
+    // 回车发送(兼容中文输入法选词回车, 不误触发)
     input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') send();
+        if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) {
+            e.preventDefault();
+            send();
+        }
+    });
+    sendBtn.addEventListener('click', () => send());
+
+    // 页面卸载时主动断开, 避免触发无意义的自动重连
+    window.addEventListener('beforeunload', () => {
+        manualClose = true;
+        if (pingTimer) clearInterval(pingTimer);
+        if (reconnectTimer) clearTimeout(reconnectTimer);
+        if (ws) ws.close();
     });
 
+    // ============ 工具函数 ============
+    function formatTime(d) {
+        const p = (n) => String(n).padStart(2, '0');
+        return p(d.getHours()) + ':' + p(d.getMinutes());
+    }
+
+    // ============ 启动: init() ============
     init();
 </script>
 </body>

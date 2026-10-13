@@ -36,13 +36,16 @@ class WsType:
     # 客户端 -> 服务端
     CHAT = 'chat'          # 发送聊天消息 {content}
     PING = 'ping'          # 心跳保活
-    # 服务端 -> 客户端
+    # 服务端 -> 客户端 (访客侧)
     CHUNK = 'chunk'              # 流式输出的一个分片 {delta}
     MESSAGE_END = 'message_end'  # 一条消息输出完毕 {message}
     SESSION_STATUS = 'session_status'  # 会话状态变化 {status}
     STAFF_REPLY = 'staff_reply'  # 人工客服回复(实时推送) {message}
     ERROR = 'error'              # 错误 {code, message}
     PONG = 'pong'
+    # 服务端 -> 客户端 (客服工作台侧, 替代轮询)
+    STAFF_SESSION = 'staff_session'    # 会话信息变更 {session}
+    STAFF_MESSAGE = 'staff_message'    # 新消息入库 {message}
 
 
 class ErrorCode:

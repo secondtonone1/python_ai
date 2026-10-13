@@ -42,6 +42,14 @@ class KnowledgeDao:
             cursor.execute(sql, (category, question, keywords, answer))
             return cursor.lastrowid
 
+    def get(self, knowledge_id: int) -> dict | None:
+        """按主键查询知识条目 (编辑回填/存在性判断用), 不存在返回 None"""
+        sql = ('SELECT id, category, question, keywords, answer, enabled, hit_count, created_at '
+               'FROM t_knowledge WHERE id = %s')
+        with self._pool.cursor() as cursor:
+            cursor.execute(sql, (knowledge_id,))
+            return cursor.fetchone()
+
     def update(self, knowledge_id: int, fields: dict) -> int:
         """按字段更新知识条目 (fields 只包含要更新的列), 返回受影响行数"""
         allowed = {'category', 'question', 'keywords', 'answer', 'enabled'}
